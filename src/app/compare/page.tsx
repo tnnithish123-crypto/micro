@@ -4,9 +4,10 @@ import { useState, useMemo } from "react";
 import { products, type Product } from "@/data/products";
 import { useCompare } from "@/components/AppProviders";
 import ProductCard from "@/components/ProductCard";
+import SimulationModal from "@/components/SimulationModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { X, Plus, Trash2, CheckCircle, ArrowLeft, Laptop } from "lucide-react";
+import { X, Plus, Trash2, CheckCircle, ArrowLeft, Laptop, Zap } from "lucide-react";
 
 interface SpecRow {
   label: string;
@@ -228,6 +229,7 @@ function getBestIndices(
 export default function ComparePage() {
   const { items, removeFromCompare, clearCompare } = useCompare();
   const [showSuggestions, setShowSuggestions] = useState(true);
+  const [showSimulation, setShowSimulation] = useState(false);
 
   const comparedProducts = useMemo(() => {
     return items
@@ -414,6 +416,54 @@ export default function ComparePage() {
             </tbody>
           </table>
         </div>
+
+        {/* Performance Simulation Button */}
+        {comparedProducts.length >= 2 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="mt-8"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 border border-blue-100 p-6 sm:p-8">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-blue-500/10 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-indigo-500/10 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+              <div className="relative flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/25">
+                  <Zap size={24} className="text-white" />
+                </div>
+                <div className="text-center sm:text-left flex-1">
+                  <h3 className="text-lg font-bold text-gray-900 mb-1">
+                    Interactive Performance Simulation
+                  </h3>
+                  <p className="text-sm text-gray-500">
+                    Run {33} real-world benchmarks side by side — system boot, creative apps,
+                    gaming FPS, AI workloads, and more. See live CPU, GPU, RAM, and temperature
+                    metrics in real time.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowSimulation(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25 shrink-0"
+                >
+                  <Zap size={16} />
+                  Start Simulation
+                </button>
+              </div>
+              <p className="relative mt-4 text-[10px] text-amber-600 flex items-start gap-1.5">
+                <span className="shrink-0 mt-0.5">⚠</span>
+                Simulation based on hardware specifications and benchmark estimates.
+              </p>
+            </div>
+          </motion.div>
+        )}
+
+        <SimulationModal
+          isOpen={showSimulation}
+          onClose={() => setShowSimulation(false)}
+          laptop1={comparedProducts[0]}
+          laptop2={comparedProducts[1]}
+        />
       </div>
     </div>
   );
