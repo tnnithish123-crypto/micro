@@ -1,31 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  X,
-  Play,
-  Pause,
-  RotateCcw,
-  ChevronRight,
-  AlertTriangle,
-  Laptop,
-  Trophy,
-  BarChart3,
-} from "lucide-react";
+import { X, Trophy, RotateCcw, AlertTriangle, Zap } from "lucide-react";
 import { type Product } from "@/data/products";
 import {
-  TEST_DEFINITIONS,
-  calculateTestMetrics,
   calculateTestTime,
-  getEfficiencyRating,
   generateFinalReport,
-  type TestResult,
-  type LaptopMetrics,
   type FinalReport as FinalReportType,
 } from "@/lib/simulationEngine";
-import LiveMetricsPanel from "./LiveMetricsPanel";
-import TestResultSummary from "./TestResultSummary";
+import LaptopScreen from "./LaptopScreen";
 import FinalReport from "./FinalReport";
 
 interface SimulationModalProps {
@@ -35,7 +19,47 @@ interface SimulationModalProps {
   laptop2: Product;
 }
 
-type Phase = "idle" | "running" | "paused" | "testComplete" | "report";
+export interface AppDefinition {
+  id: string;
+  name: string;
+  category: "browser" | "dev" | "creative" | "gaming" | "productivity" | "ai" | "system";
+  color: string;
+  bgColor: string;
+  icon: string;
+}
+
+const APPS: AppDefinition[] = [
+  { id: "system-boot", name: "System Boot", category: "system", color: "#6366f1", bgColor: "#eef2ff", icon: "power" },
+  { id: "open-chrome", name: "Chrome", category: "browser", color: "#4285f4", bgColor: "#e8f0fe", icon: "globe" },
+  { id: "vscode", name: "VS Code", category: "dev", color: "#007acc", bgColor: "#e6f3ff", icon: "code" },
+  { id: "android-studio", name: "Android Studio", category: "dev", color: "#3ddc84", bgColor: "#e8f8ee", icon: "smartphone" },
+  { id: "photoshop", name: "Photoshop", category: "creative", color: "#31a8ff", bgColor: "#e6f4ff", icon: "image" },
+  { id: "lightroom", name: "Lightroom", category: "creative", color: "#31a8ff", bgColor: "#e6f4ff", icon: "aperture" },
+  { id: "premiere-export", name: "Premiere Pro", category: "creative", color: "#9999ff", bgColor: "#eeeeff", icon: "film" },
+  { id: "blender-render", name: "Blender", category: "creative", color: "#ea7600", bgColor: "#fef3e2", icon: "box" },
+  { id: "office", name: "Office", category: "productivity", color: "#d83b01", bgColor: "#fde8e0", icon: "file-text" },
+  { id: "excel", name: "Excel", category: "productivity", color: "#217346", bgColor: "#e0f2e9", icon: "table" },
+  { id: "zoom", name: "Zoom", category: "productivity", color: "#2d8cff", bgColor: "#e6f3ff", icon: "video" },
+  { id: "minecraft", name: "Minecraft", category: "gaming", color: "#62b847", bgColor: "#eaf7e4", icon: "blocks" },
+  { id: "gta-v", name: "GTA V", category: "gaming", color: "#f5a623", bgColor: "#fef5e2", icon: "car" },
+  { id: "valorant", name: "Valorant", category: "gaming", color: "#ff4655", bgColor: "#ffe6e8", icon: "target" },
+  { id: "cyberpunk-2077", name: "Cyberpunk 2077", category: "gaming", color: "#fcee09", bgColor: "#fefde6", icon: "cpu" },
+  { id: "fortnite", name: "Fortnite", category: "gaming", color: "#9d4dbb", bgColor: "#f3e6fc", icon: "crosshair" },
+  { id: "apex-legends", name: "Apex Legends", category: "gaming", color: "#da292a", bgColor: "#fde6e6", icon: "swords" },
+  { id: "ai-image-gen", name: "AI Image Gen", category: "ai", color: "#8b5cf6", bgColor: "#f0ebff", icon: "paintbrush" },
+  { id: "stable-diffusion", name: "Stable Diffusion", category: "ai", color: "#a855f7", bgColor: "#f3e8ff", icon: "sparkles" },
+  { id: "local-llm", name: "Local LLM", category: "ai", color: "#06b6d4", bgColor: "#e0f7fa", icon: "message-square" },
+];
+
+interface TestState {
+  appId: string;
+  progress1: number;
+  progress2: number;
+  time1: number;
+  time2: number;
+  done1: boolean;
+  done2: boolean;
+}
 
 export default function SimulationModal({
   isOpen,
@@ -43,151 +67,118 @@ export default function SimulationModal({
   laptop1,
   laptop2,
 }: SimulationModalProps) {
-  const [phase, setPhase] = useState<Phase>("idle");
-  const [currentTestIndex, setCurrentTestIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const [metrics1, setMetrics1] = useState<LaptopMetrics | null>(null);
-  const [metrics2, setMetrics2] = useState<LaptopMetrics | null>(null);
-  const [results, setResults] = useState<TestResult[]>([]);
-  const [currentResult, setCurrentResult] = useState<TestResult | null>(null);
-  const [report, setReport] = useState<FinalReportType | null>(null);
-  const [showResultDetail, setShowResultDetail] = useState(false);
+  const [activeApp, setActiveApp] = useState<string | null>(null);
+  const [testState, setTestState] = useState<TestState | null>(null);
+  const [completedTests, setCompletedTests] = useState<
+    Array<{ appId: string; time1: number; time2: number; winner: 0 | 1 | -1 }>
+  >([]);
+  const [showReport, setShowReport] = useState(false);
   const rafRef = useRef<number>(0);
-  const lastTimeRef = useRef<number>(0);
-  const pausedProgressRef = useRef(0);
+  const startTimeRef = useRef<number>(0);
+  const testDuration1Ref = useRef<number>(0);
+  const testDuration2Ref = useRef<number>(0);
 
-  const totalTests = TEST_DEFINITIONS.length;
-  const currentTest = TEST_DEFINITIONS[currentTestIndex];
+  const appDef = activeApp ? APPS.find((a) => a.id === activeApp) : null;
 
-  const runTestFrame = useCallback(
+  const runTest = useCallback(
     (timestamp: number) => {
-      if (!lastTimeRef.current) lastTimeRef.current = timestamp;
-      const delta = (timestamp - lastTimeRef.current) / 1000;
-      lastTimeRef.current = timestamp;
+      if (!startTimeRef.current) startTimeRef.current = timestamp;
+      const elapsed = (timestamp - startTimeRef.current) / 1000;
 
-      const test = TEST_DEFINITIONS[currentTestIndex];
-      const testDuration = test.isFpsTest
-        ? 8
-        : Math.min(calculateTestTime(laptop1, test.id), calculateTestTime(laptop2, test.id)) * 0.15;
-      const speed = Math.max(testDuration, 3);
+      const d1 = testDuration1Ref.current;
+      const d2 = testDuration2Ref.current;
 
-      setProgress((prev) => {
-        const next = Math.min(1, prev + delta / speed);
-        const m1 = calculateTestMetrics(laptop1, test.id, next);
-        const m2 = calculateTestMetrics(laptop2, test.id, next);
-        setMetrics1(m1);
-        setMetrics2(m2);
+      const p1 = Math.min(1, elapsed / d1);
+      const p2 = Math.min(1, elapsed / d2);
+      const done1 = p1 >= 1;
+      const done2 = p2 >= 1;
 
-        if (next >= 1) {
-          const val1 = calculateTestTime(laptop1, test.id);
-          const val2 = calculateTestTime(laptop2, test.id);
-          const winnerIndex: 0 | 1 | -1 =
-            val1 === val2
-              ? -1
-              : test.isFpsTest
-                ? val1 > val2
-                  ? 0
-                  : 1
-                : val1 < val2
-                  ? 0
-                  : 1;
-          const diff =
-            Math.max(val1, val2) > 0
-              ? (Math.abs(val1 - val2) / Math.max(val1, val2)) * 100
-              : 0;
-          const result: TestResult = {
-            testId: test.id,
-            testName: test.name,
-            category: test.category,
-            icon: test.icon,
-            laptop1Time: val1,
-            laptop2Time: val2,
-            laptop1Metrics: m1,
-            laptop2Metrics: m2,
-            winnerIndex,
-            difference: diff,
-            efficiency1: getEfficiencyRating(val1, test.isFpsTest),
-            efficiency2: getEfficiencyRating(val2, test.isFpsTest),
-            isFpsTest: test.isFpsTest,
-          };
-          setCurrentResult(result);
-          setResults((prev) => [...prev, result]);
-          setPhase("testComplete");
-          return 1;
-        }
-        return next;
-      });
-      rafRef.current = requestAnimationFrame(runTestFrame);
+      setTestState((prev) =>
+        prev
+          ? {
+              ...prev,
+              progress1: p1,
+              progress2: p2,
+              time1: Math.min(elapsed, d1),
+              time2: Math.min(elapsed, d2),
+              done1,
+              done2,
+            }
+          : prev
+      );
+
+      if (done1 && done2) {
+        return;
+      }
+      rafRef.current = requestAnimationFrame(runTest);
     },
-    [currentTestIndex, laptop1, laptop2]
+    []
+  );
+
+  const handleAppClick = useCallback(
+    (appId: string) => {
+      if (activeApp) return;
+      const test = APPS.find((a) => a.id === appId);
+      if (!test) return;
+
+      const d1 = calculateTestTime(laptop1, appId);
+      const d2 = calculateTestTime(laptop2, appId);
+
+      testDuration1Ref.current = d1;
+      testDuration2Ref.current = d2;
+      startTimeRef.current = 0;
+
+      setActiveApp(appId);
+      setTestState({
+        appId,
+        progress1: 0,
+        progress2: 0,
+        time1: 0,
+        time2: 0,
+        done1: false,
+        done2: false,
+      });
+
+      rafRef.current = requestAnimationFrame(runTest);
+    },
+    [activeApp, laptop1, laptop2, runTest]
   );
 
   useEffect(() => {
-    if (phase === "running") {
-      lastTimeRef.current = 0;
-      pausedProgressRef.current = 0;
-      setProgress(0);
-      rafRef.current = requestAnimationFrame(runTestFrame);
+    if (testState?.done1 && testState?.done2) {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+
+      const d1 = testDuration1Ref.current;
+      const d2 = testDuration2Ref.current;
+      const winner: 0 | 1 | -1 = d1 < d2 ? 0 : d2 < d1 ? 1 : -1;
+
+      setCompletedTests((prev) => [
+        ...prev,
+        { appId: testState.appId, time1: d1, time2: d2, winner },
+      ]);
+
+      setTimeout(() => {
+        setActiveApp(null);
+        setTestState(null);
+      }, 1800);
     }
+  }, [testState?.done1, testState?.done2, testState?.appId]);
+
+  useEffect(() => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [phase, runTestFrame]);
+  }, []);
 
-  useEffect(() => {
-    if (phase === "running" && currentTestIndex > 0) {
-      lastTimeRef.current = 0;
-      setProgress(0);
-      rafRef.current = requestAnimationFrame(runTestFrame);
-    }
-  }, [currentTestIndex, phase, runTestFrame]);
+  const handleRetry = useCallback(() => {
+    setActiveApp(null);
+    setTestState(null);
+    setCompletedTests([]);
+    setShowReport(false);
+  }, []);
 
-  const handleStart = () => {
-    setPhase("running");
-    setCurrentTestIndex(0);
-    setResults([]);
-    setReport(null);
-    setCurrentResult(null);
-    setShowResultDetail(false);
-  };
-
-  const handlePause = () => {
-    if (phase === "running") {
-      setPhase("paused");
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    }
-  };
-
-  const handleResume = () => {
-    if (phase === "paused") {
-      setPhase("running");
-    }
-  };
-
-  const handleNextTest = () => {
-    setShowResultDetail(false);
-    setCurrentResult(null);
-    if (currentTestIndex + 1 >= totalTests) {
-      const finalReport = generateFinalReport(results, laptop1, laptop2);
-      setReport(finalReport);
-      setPhase("report");
-    } else {
-      setCurrentTestIndex((prev) => prev + 1);
-      setPhase("running");
-    }
-  };
-
-  const handleRetry = () => {
-    setPhase("idle");
-    setCurrentTestIndex(0);
-    setResults([]);
-    setReport(null);
-    setCurrentResult(null);
-    setProgress(0);
-    setMetrics1(null);
-    setMetrics2(null);
-    setShowResultDetail(false);
-  };
+  const l1Wins = completedTests.filter((t) => t.winner === 0).length;
+  const l2Wins = completedTests.filter((t) => t.winner === 1).length;
 
   if (!isOpen) return null;
 
@@ -197,284 +188,279 @@ export default function SimulationModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-2 sm:p-4"
-        onClick={(e) => e.target === e.currentTarget && phase !== "running" && onClose()}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-2 sm:p-4"
+        onClick={(e) => e.target === e.currentTarget && !activeApp && onClose()}
       >
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.92, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="relative w-full max-w-[1400px] h-[95vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+          exit={{ scale: 0.92, opacity: 0 }}
+          className="relative w-full max-w-[1600px] h-[96vh] bg-gray-950 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-indigo-50 shrink-0">
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-gray-900 border-b border-gray-800 shrink-0">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
-                <BarChart3 size={16} className="text-white" />
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                <Zap size={16} className="text-white" />
               </div>
               <div>
-                <h2 className="text-sm sm:text-base font-bold text-gray-900">
+                <h2 className="text-sm sm:text-base font-bold text-white">
                   Performance Simulation
                 </h2>
-                <p className="text-[10px] sm:text-xs text-gray-500">
-                  {phase === "idle" && "Ready to start"}
-                  {phase === "running" && `Test ${currentTestIndex + 1} of ${totalTests}: ${currentTest?.name}`}
-                  {phase === "paused" && `Paused at test ${currentTestIndex + 1}`}
-                  {phase === "testComplete" && `Test ${currentTestIndex + 1} complete`}
-                  {phase === "report" && "Final Report"}
+                <p className="text-[10px] sm:text-xs text-gray-400">
+                  Click any app below to open it on both laptops simultaneously
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              {phase === "running" && (
+            <div className="flex items-center gap-4">
+              {/* Score */}
+              <div className="hidden sm:flex items-center gap-3 text-sm">
+                <span className="text-blue-400 font-bold">{laptop1.name.split(" ").slice(-1)[0]}</span>
+                <span className="text-white font-bold text-lg">{l1Wins}</span>
+                <span className="text-gray-500">-</span>
+                <span className="text-white font-bold text-lg">{l2Wins}</span>
+                <span className="text-purple-400 font-bold">{laptop2.name.split(" ").slice(-1)[0]}</span>
+              </div>
+              {completedTests.length > 0 && (
                 <button
-                  onClick={handlePause}
-                  className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  onClick={() => setShowReport(true)}
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-amber-400 bg-amber-400/10 border border-amber-400/20 rounded-lg hover:bg-amber-400/20 transition-colors"
                 >
-                  <Pause size={16} />
-                </button>
-              )}
-              {phase === "paused" && (
-                <button
-                  onClick={handleResume}
-                  className="p-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors"
-                >
-                  <Play size={16} />
+                  <Trophy size={12} />
+                  Report
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg transition-colors"
               >
                 <X size={16} />
               </button>
             </div>
           </div>
 
-          {/* Progress bar */}
-          <div className="w-full h-1 bg-gray-100 shrink-0">
-            <motion.div
-              className="h-full bg-gradient-to-r from-blue-500 to-indigo-500"
-              animate={{ width: `${((currentTestIndex + progress) / totalTests) * 100}%` }}
-              transition={{ duration: 0.3 }}
-            />
-          </div>
-
           {/* Main content */}
-          <div className="flex-1 overflow-y-auto p-3 sm:p-6">
-            {/* Idle state */}
-            {phase === "idle" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center h-full text-center"
-              >
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center mb-6">
-                  <Play size={32} className="text-white ml-1" />
-                </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">
-                  Ready to Simulate
-                </h3>
-                <p className="text-gray-500 text-sm max-w-md mb-8">
-                  Run {totalTests} performance benchmarks across system, productivity, creative,
-                  development, gaming, and AI workloads.
-                </p>
-
-                <div className="flex items-center gap-8 mb-8">
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center mb-2">
-                      <Laptop size={24} className="text-gray-400" />
-                    </div>
-                    <p className="text-xs font-semibold text-gray-700 max-w-[120px] line-clamp-2">
-                      {laptop1.name}
-                    </p>
-                  </div>
-                  <div className="text-2xl font-bold text-gray-300">VS</div>
-                  <div className="text-center">
-                    <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 flex items-center justify-center mb-2">
-                      <Laptop size={24} className="text-gray-400" />
-                    </div>
-                    <p className="text-xs font-semibold text-gray-700 max-w-[120px] line-clamp-2">
-                      {laptop2.name}
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  onClick={handleStart}
-                  className="inline-flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25"
-                >
-                  <Play size={18} />
-                  Start Simulation
-                </button>
-
-                <div className="mt-8 flex items-start gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 max-w-md">
-                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                  <p>
-                    Simulation based on hardware specifications and benchmark estimates. Actual
-                    performance may vary based on drivers, thermals, and workload conditions.
-                  </p>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Running / Paused state */}
-            {(phase === "running" || phase === "paused") && currentTest && (
-              <div className="space-y-4">
-                {/* Test info */}
-                <div className="text-center">
-                  <motion.div
-                    key={currentTest.id}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-200"
-                  >
-                    <span className="text-xs font-medium text-blue-600 uppercase tracking-wider">
-                      Test {currentTestIndex + 1}/{totalTests}
-                    </span>
-                    <span className="w-1 h-1 rounded-full bg-blue-400" />
-                    <span className="text-sm font-semibold text-blue-800">{currentTest.name}</span>
-                  </motion.div>
-                  <p className="text-xs text-gray-500 mt-2">{currentTest.description}</p>
-                </div>
-
-                {/* Side by side laptops with metrics */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-                      <Laptop size={14} className="text-blue-500" />
-                      <span className="text-xs font-semibold text-gray-700 truncate">
-                        {laptop1.name}
-                      </span>
-                      <span className="ml-auto text-[10px] text-gray-400 uppercase">Left</span>
-                    </div>
-                    {metrics1 && (
-                      <LiveMetricsPanel
-                        metrics={metrics1}
-                        laptopName={laptop1.name}
-                        isActive={phase === "running"}
-                      />
-                    )}
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 border border-gray-200">
-                      <Laptop size={14} className="text-indigo-500" />
-                      <span className="text-xs font-semibold text-gray-700 truncate">
-                        {laptop2.name}
-                      </span>
-                      <span className="ml-auto text-[10px] text-gray-400 uppercase">Right</span>
-                    </div>
-                    {metrics2 && (
-                      <LiveMetricsPanel
-                        metrics={metrics2}
-                        laptopName={laptop2.name}
-                        isActive={phase === "running"}
-                      />
-                    )}
-                  </div>
-                </div>
-
-                {/* Progress */}
-                <div className="text-center">
-                  <div className="inline-flex items-center gap-3">
-                    <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <motion.div
-                        className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full"
-                        animate={{ width: `${progress * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs font-mono text-gray-500">
-                      {(progress * 100).toFixed(0)}%
-                    </span>
-                  </div>
-                </div>
-
-                {/* Disclaimer */}
-                <div className="flex items-start gap-2 text-[10px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 max-w-2xl mx-auto">
-                  <AlertTriangle size={12} className="mt-0.5 shrink-0" />
-                  <p>
-                    Simulation based on hardware specifications and benchmark estimates.
-                  </p>
-                </div>
-              </div>
-            )}
-
-            {/* Test complete */}
-            {phase === "testComplete" && currentResult && (
-              <div className="space-y-4">
-                <TestResultSummary
-                  result={currentResult}
-                  laptop1Name={laptop1.name}
-                  laptop2Name={laptop2.name}
+          <div className="flex-1 overflow-hidden flex flex-col">
+            {/* Two laptop screens */}
+            <div className="flex-1 flex items-center justify-center gap-4 p-3 sm:p-6">
+              <div className="flex-1 max-w-[600px] h-full">
+                <LaptopScreen
+                  laptopName={laptop1.name}
+                  laptopIndex={0}
+                  testState={testState}
+                  appDef={appDef ?? undefined}
+                  accentColor="#3b82f6"
                 />
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleNextTest}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25"
-                  >
-                    {currentTestIndex + 1 >= totalTests ? (
-                      <>
-                        <Trophy size={16} />
-                        View Final Report
-                      </>
-                    ) : (
-                      <>
-                        Next Test
-                        <ChevronRight size={16} />
-                      </>
-                    )}
-                  </button>
-                </div>
-                {/* Score so far */}
-                <div className="text-center text-xs text-gray-500">
-                  Score so far: {laptop1.name.split(" ").slice(0, 2).join(" ")}{" "}
-                  <span className="font-bold text-blue-600">
-                    {results.filter((r) => r.winnerIndex === 0).length}
-                  </span>{" "}
-                  -{" "}
-                  <span className="font-bold text-indigo-600">
-                    {results.filter((r) => r.winnerIndex === 1).length}
-                  </span>{" "}
-                  {laptop2.name.split(" ").slice(0, 2).join(" ")}
-                  {" | Ties: "}
-                  <span className="font-bold text-gray-500">
-                    {results.filter((r) => r.winnerIndex === -1).length}
-                  </span>
-                </div>
               </div>
-            )}
-
-            {/* Report */}
-            {phase === "report" && report && (
-              <div className="space-y-6">
-                <FinalReport
-                  report={report}
-                  laptop1Name={laptop1.name}
-                  laptop2Name={laptop2.name}
-                  laptop1Price={laptop1.price}
-                  laptop2Price={laptop2.price}
+              <div className="hidden sm:flex flex-col items-center gap-2 text-gray-500">
+                <span className="text-xs font-bold uppercase tracking-widest">VS</span>
+              </div>
+              <div className="flex-1 max-w-[600px] h-full">
+                <LaptopScreen
+                  laptopName={laptop2.name}
+                  laptopIndex={1}
+                  testState={testState}
+                  appDef={appDef ?? undefined}
+                  accentColor="#a855f7"
                 />
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleRetry}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
-                  >
-                    <RotateCcw size={16} />
-                    Run Again
-                  </button>
-                </div>
-                <div className="flex items-start gap-2 text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 max-w-2xl mx-auto">
-                  <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-                  <p>
-                    Simulation based on hardware specifications and benchmark estimates. Actual
-                    performance may vary based on drivers, thermals, and workload conditions.
-                  </p>
-                </div>
               </div>
-            )}
+            </div>
+
+            {/* App icons grid */}
+            <div className="shrink-0 bg-gray-900 border-t border-gray-800 px-4 sm:px-6 py-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                  Select an app to test
+                </span>
+                {activeApp && (
+                  <motion.span
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-[10px] text-blue-400 animate-pulse"
+                  >
+                    Running...
+                  </motion.span>
+                )}
+              </div>
+              <div className="grid grid-cols-5 sm:grid-cols-10 gap-2">
+                {APPS.map((app) => {
+                  const isDone = completedTests.some((t) => t.appId === app.id);
+                  const isActive = activeApp === app.id;
+                  return (
+                    <button
+                      key={app.id}
+                      onClick={() => handleAppClick(app.id)}
+                      disabled={!!activeApp}
+                      className={`
+                        relative flex flex-col items-center gap-1 p-2 rounded-xl transition-all
+                        ${isActive ? "bg-blue-500/20 ring-2 ring-blue-500" : ""}
+                        ${isDone && !isActive ? "opacity-50" : ""}
+                        ${!activeApp ? "hover:bg-gray-800 cursor-pointer" : "cursor-not-allowed"}
+                      `}
+                    >
+                      <div
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg"
+                        style={{ backgroundColor: app.color }}
+                      >
+                        {getAppIcon(app.icon)}
+                      </div>
+                      <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium text-center leading-tight truncate w-full">
+                        {app.name}
+                      </span>
+                      {isDone && (
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                          <span className="text-[8px] text-white font-bold">✓</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-3 flex items-start gap-2 text-[10px] text-amber-500/70">
+                <AlertTriangle size={10} className="mt-0.5 shrink-0" />
+                <span>Simulation based on hardware specifications and benchmark estimates.</span>
+              </div>
+            </div>
           </div>
+
+          {/* Completed tests history bar */}
+          {completedTests.length > 0 && (
+            <div className="shrink-0 bg-gray-900/80 border-t border-gray-800 px-4 py-2 overflow-x-auto">
+              <div className="flex gap-2 min-w-max">
+                {completedTests.map((t, i) => {
+                  const app = APPS.find((a) => a.id === t.appId);
+                  return (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 px-2 py-1 rounded-lg bg-gray-800/50 text-[10px]"
+                    >
+                      <span className="text-gray-400">{app?.name}</span>
+                      <span className={t.winner === 0 ? "text-blue-400 font-bold" : "text-gray-500"}>
+                        {t.time1.toFixed(1)}s
+                      </span>
+                      <span className="text-gray-600">vs</span>
+                      <span className={t.winner === 1 ? "text-purple-400 font-bold" : "text-gray-500"}>
+                        {t.time2.toFixed(1)}s
+                      </span>
+                      {t.winner === 0 && <span className="text-blue-400">◀</span>}
+                      {t.winner === 1 && <span className="text-purple-400">▶</span>}
+                      {t.winner === -1 && <span className="text-gray-500">=</span>}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Report Modal */}
+          {showReport && (
+            <FinalReportOverlay
+              tests={completedTests}
+              laptop1={laptop1}
+              laptop2={laptop2}
+              onClose={() => setShowReport(false)}
+              onRetry={handleRetry}
+            />
+          )}
         </motion.div>
       </motion.div>
     </AnimatePresence>
   );
+}
+
+function FinalReportOverlay({
+  tests,
+  laptop1,
+  laptop2,
+  onClose,
+  onRetry,
+}: {
+  tests: Array<{ appId: string; time1: number; time2: number; winner: 0 | 1 | -1 }>;
+  laptop1: Product;
+  laptop2: Product;
+  onClose: () => void;
+  onRetry: () => void;
+}) {
+  const results = tests.map((t) => {
+    const test = APPS.find((a) => a.id === t.appId);
+    return {
+      testId: t.appId,
+      testName: test?.name || t.appId,
+      category: (test?.category || "system") as string,
+      icon: test?.icon || "box",
+      laptop1Time: t.time1,
+      laptop2Time: t.time2,
+      laptop1Metrics: { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
+      laptop2Metrics: { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
+      winnerIndex: t.winner as 0 | 1 | -1,
+      difference: Math.max(t.time1, t.time2) > 0 ? (Math.abs(t.time1 - t.time2) / Math.max(t.time1, t.time2)) * 100 : 0,
+      efficiency1: "Good",
+      efficiency2: "Good",
+      isFpsTest: false,
+    };
+  });
+
+  const report = generateFinalReport(results as any, laptop1, laptop2);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="absolute inset-0 z-50 bg-white overflow-y-auto"
+    >
+      <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white border-b border-gray-200 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-900">Final Comparison Report</h2>
+        <div className="flex gap-3">
+          <button
+            onClick={onRetry}
+            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            <RotateCcw size={14} />
+            Run Again
+          </button>
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      </div>
+      <div className="max-w-5xl mx-auto p-6">
+        <FinalReport
+          report={report}
+          laptop1Name={laptop1.name}
+          laptop2Name={laptop2.name}
+          laptop1Price={laptop1.price}
+          laptop2Price={laptop2.price}
+        />
+      </div>
+    </motion.div>
+  );
+}
+
+function getAppIcon(icon: string) {
+  const icons: Record<string, string> = {
+    power: "⏻",
+    globe: "🌐",
+    code: "</>",
+    smartphone: "📱",
+    image: "🖼",
+    aperture: "◎",
+    film: "🎬",
+    box: "📦",
+    "file-text": "📄",
+    table: "📊",
+    video: "📹",
+    blocks: "🧱",
+    car: "🚗",
+    target: "◎",
+    cpu: "⚡",
+    crosshair: "⊕",
+    swords: "⚔",
+    paintbrush: "🎨",
+    sparkles: "✨",
+    "message-square": "💬",
+  };
+  return <span className="text-base">{icons[icon] || "▶"}</span>;
 }
