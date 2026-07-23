@@ -298,12 +298,7 @@ export default function SimulationModal({
                         ${!activeApp ? "hover:bg-gray-800 cursor-pointer" : "cursor-not-allowed"}
                       `}
                     >
-                      <div
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-lg"
-                        style={{ backgroundColor: app.color }}
-                      >
-                        {getAppIcon(app.icon)}
-                      </div>
+                      <SmallAppIcon appId={app.id} color={app.color} />
                       <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium text-center leading-tight truncate w-full">
                         {app.name}
                       </span>
@@ -439,28 +434,87 @@ function FinalReportOverlay({
   );
 }
 
-function getAppIcon(icon: string) {
-  const icons: Record<string, string> = {
-    power: "⏻",
-    globe: "🌐",
-    code: "</>",
-    smartphone: "📱",
-    image: "🖼",
-    aperture: "◎",
-    film: "🎬",
-    box: "📦",
-    "file-text": "📄",
-    table: "📊",
-    video: "📹",
-    blocks: "🧱",
-    car: "🚗",
-    target: "◎",
-    cpu: "⚡",
-    crosshair: "⊕",
-    swords: "⚔",
-    paintbrush: "🎨",
-    sparkles: "✨",
-    "message-square": "💬",
-  };
-  return <span className="text-base">{icons[icon] || "▶"}</span>;
+function SmallAppIcon({ appId, color }: { appId: string; color: string }) {
+  const base = "w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center text-white font-bold text-xs shadow-lg shrink-0";
+
+  switch (appId) {
+    case "photoshop":
+      return <div className={`${base} bg-[#001e36] border border-[#31a8ff]/30`}><span className="text-[#31a8ff] text-sm font-black">Ps</span></div>;
+    case "lightroom":
+      return <div className={`${base} bg-[#1a2744] border border-[#31a8ff]/30`}><span className="text-[#31a8ff] text-sm font-black">Lr</span></div>;
+    case "premiere-export":
+      return <div className={`${base} bg-[#1a0a2e] border border-[#9999ff]/30`}><span className="text-[#9999ff] text-sm font-black">Pr</span></div>;
+    case "open-chrome":
+      return (
+        <div className={`${base} bg-white`}>
+          <svg width="28" height="28" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="20" fill="#fff"/>
+            <circle cx="24" cy="24" r="8" fill="#4285f4"/>
+            <path d="M24 16 L38 16 A14 14 0 0 1 31 36 L24 24 Z" fill="#ea4335"/>
+            <path d="M31 36 L17 36 A14 14 0 0 1 10 16 L24 24 Z" fill="#34a853"/>
+            <path d="M10 16 L24 16 L24 24 Z" fill="#fbbc05"/>
+            <circle cx="24" cy="24" r="8" fill="#4285f4"/>
+            <circle cx="24" cy="24" r="5" fill="#fff"/>
+            <circle cx="24" cy="24" r="5" fill="#4285f4" opacity="0.9"/>
+          </svg>
+        </div>
+      );
+    case "vscode":
+      return (
+        <div className={`${base} bg-[#1e1e2e] border border-[#007acc]/30`}>
+          <svg width="28" height="28" viewBox="0 0 48 48">
+            <path d="M12 12 L22 24 L12 36" stroke="#007acc" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M22 24 L36 14" stroke="#007acc" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M22 24 L36 34" stroke="#007acc" strokeWidth="2.5" fill="none" strokeLinecap="round"/>
+            <path d="M30 12 L36 14 L36 34 L30 36" stroke="#007acc" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+      );
+    case "android-studio":
+      return <div className={`${base} bg-gradient-to-br from-[#3ddc84] to-[#0f9d58]`}><span className="text-lg">🤖</span></div>;
+    case "blender-render":
+      return <div className={`${base} bg-[#265c9c]`}><span className="text-orange-400 text-lg font-black">B</span></div>;
+    case "gta-v":
+      return (
+        <div className={`${base} bg-black border border-[#f5a623]/30`}>
+          <span className="text-[#f5a623] text-[10px] font-black leading-none text-center" style={{fontFamily:"Impact,sans-serif"}}>GTA<br/>V</span>
+        </div>
+      );
+    case "valorant":
+      return (
+        <div className={`${base} bg-[#0f1419] border border-[#ff4655]/30`}>
+          <span className="text-white text-[7px] font-black tracking-widest">VAL</span>
+        </div>
+      );
+    case "cyberpunk-2077":
+      return (
+        <div className={`${base} bg-black border border-[#fcee09]/40`}>
+          <span className="text-[#fcee09] text-[9px] font-black" style={{fontFamily:"Impact,sans-serif"}}>2077</span>
+        </div>
+      );
+    case "fortnite":
+      return <div className={`${base} bg-gradient-to-br from-[#1a0a3e] to-[#9d4dbb]`}><span className="text-white text-[9px] font-black tracking-wider">FN</span></div>;
+    case "apex-legends":
+      return (
+        <div className={`${base} bg-black border border-[#da292a]/30`}>
+          <span className="text-white text-[8px] font-black tracking-wider">APEX</span>
+        </div>
+      );
+    case "minecraft":
+      return <div className={`${base} bg-[#3b7a33]`}><span className="text-white text-[9px] font-black">MC</span></div>;
+    case "office":
+      return <div className={`${base} bg-gradient-to-br from-[#d83b01] to-[#c23800]`}><span className="text-white text-lg font-black">O</span></div>;
+    case "excel":
+      return <div className={`${base} bg-gradient-to-br from-[#1a5e2a] to-[#217346]`}><span className="text-white text-lg font-black">X</span></div>;
+    case "zoom":
+      return <div className={`${base} bg-[#2d8cff]`}><span className="text-white text-lg">📹</span></div>;
+    case "ai-image-gen":
+    case "stable-diffusion":
+    case "local-llm":
+      return <div className={`${base} bg-gradient-to-br from-purple-900 to-indigo-900 border border-purple-500/30`}><span className="text-purple-300 text-lg">✨</span></div>;
+    case "system-boot":
+      return <div className={`${base} bg-[#0096d6]`}><span className="text-white text-lg font-black" style={{fontFamily:"system-ui"}}>hp</span></div>;
+    default:
+      return <div className={`${base}`} style={{backgroundColor: color}}><span className="text-white text-lg">▶</span></div>;
+  }
 }

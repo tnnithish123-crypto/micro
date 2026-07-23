@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from "framer-motion";
 import type { AppDefinition } from "./SimulationModal";
+import AppSplash from "./AppSplash";
 
 interface LaptopScreenProps {
   laptopName: string;
@@ -28,7 +29,7 @@ export default function LaptopScreen({
 }: LaptopScreenProps) {
   const progress = laptopIndex === 0 ? testState?.progress1 ?? 0 : testState?.progress2 ?? 0;
   const time = laptopIndex === 0 ? testState?.time1 ?? 0 : testState?.time2 ?? 0;
-  const done = laptopIndex === 0 ? testState?.done1 : testState?.done2;
+  const done = (laptopIndex === 0 ? testState?.done1 : testState?.done2) ?? false;
   const isRunning = !!testState && !done;
 
   const shortName = laptopName.split(" ").slice(-2).join(" ");
@@ -60,9 +61,9 @@ export default function LaptopScreen({
 
           {/* Screen */}
           <div className="absolute inset-[3px] bg-gray-950 rounded-t-lg overflow-hidden">
-            {/* Desktop */}
             <AnimatePresence mode="wait">
               {!testState ? (
+                /* Desktop idle state */
                 <motion.div
                   key="desktop"
                   initial={{ opacity: 0 }}
@@ -70,15 +71,15 @@ export default function LaptopScreen({
                   exit={{ opacity: 0 }}
                   className="absolute inset-0 bg-gradient-to-br from-gray-900 via-gray-950 to-gray-900"
                 >
-                  {/* Desktop wallpaper pattern */}
+                  {/* Wallpaper pattern */}
                   <div className="absolute inset-0 opacity-5">
                     <div className="absolute top-1/4 left-1/4 w-32 h-32 rounded-full border border-white/20" />
                     <div className="absolute bottom-1/3 right-1/4 w-24 h-24 rounded-full border border-white/10" />
                   </div>
 
-                  {/* Desktop icon grid */}
+                  {/* Desktop icons */}
                   <div className="absolute inset-4 grid grid-cols-3 gap-2 content-start pt-6">
-                    {["Chrome", "VS Code", "GTA V", "Photoshop", "Premiere Pro"].map(
+                    {["Chrome", "VS Code", "GTA V", "Photoshop", "Premiere"].map(
                       (name) => (
                         <div
                           key={name}
@@ -106,107 +107,80 @@ export default function LaptopScreen({
                   </div>
                 </motion.div>
               ) : (
+                /* App splash screen */
                 <motion.div
                   key={`app-${testState.appId}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.92 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="absolute inset-0 flex flex-col"
-                  style={{ backgroundColor: appDef?.color ? `${appDef.color}15` : "#111" }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="absolute inset-0"
                 >
-                  {/* App splash / loading screen */}
-                  <div className="flex-1 flex flex-col items-center justify-center gap-4">
-                    {/* App logo */}
-                    <motion.div
-                      initial={{ scale: 0.5, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl flex items-center justify-center shadow-2xl"
-                      style={{ backgroundColor: appDef?.color || "#666" }}
-                    >
-                      <span className="text-3xl sm:text-4xl text-white font-bold">
-                        {getAppLogo(appDef?.icon || "box")}
-                      </span>
-                    </motion.div>
+                  <AppSplash
+                    appId={testState.appId}
+                    progress={progress}
+                    done={done}
+                    appName={appDef?.name || ""}
+                    appColor={appDef?.color || "#666"}
+                  />
 
-                    {/* App name */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.2 }}
-                      className="text-center"
-                    >
-                      <h3 className="text-sm sm:text-base font-bold text-white">
-                        {appDef?.name}
-                      </h3>
-                      <p className="text-[10px] text-gray-400 mt-0.5">
-                        {done ? "Loaded" : "Loading..."}
-                      </p>
-                    </motion.div>
-
-                    {/* Progress bar */}
-                    <div className="w-3/4 max-w-[200px]">
-                      <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                        <motion.div
-                          className="h-full rounded-full"
-                          style={{ backgroundColor: appDef?.color || "#666" }}
-                          animate={{ width: `${progress * 100}%` }}
-                          transition={{ duration: 0.1 }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Timer */}
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.3 }}
-                      className="text-center"
-                    >
-                      <span
-                        className="text-2xl sm:text-3xl font-mono font-bold tabular-nums"
-                        style={{ color: appDef?.color || "#fff" }}
-                      >
+                  {/* Timer overlay at bottom-right */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="absolute bottom-9 right-3"
+                  >
+                    <div className="px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-sm">
+                      <span className="text-base sm:text-lg font-mono font-bold tabular-nums text-white">
                         {time.toFixed(2)}
                       </span>
-                      <span className="text-xs text-gray-500 ml-1">sec</span>
-                    </motion.div>
+                      <span className="text-[10px] text-gray-400 ml-0.5">s</span>
+                    </div>
+                  </motion.div>
 
-                    {/* Winner indicator when done */}
-                    {done && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="flex items-center gap-2"
-                      >
-                        {(() => {
-                          const isWinner =
-                            testState &&
-                            ((laptopIndex === 0 && testState.time1 <= testState.time2) ||
-                              (laptopIndex === 1 && testState.time2 <= testState.time1));
-                          const isTie = testState && testState.time1 === testState.time2;
-                          if (isTie) {
-                            return (
-                              <span className="px-3 py-1 rounded-full bg-gray-500/20 text-gray-300 text-xs font-bold">
+                  {/* Winner badge */}
+                  {done && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.6, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                      className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30"
+                    >
+                      {(() => {
+                        const isWinner =
+                          testState &&
+                          ((laptopIndex === 0 && testState.time1 <= testState.time2) ||
+                            (laptopIndex === 1 && testState.time2 <= testState.time1));
+                        const isTie = testState && testState.time1 === testState.time2;
+                        if (isTie) {
+                          return (
+                            <div className="px-5 py-3 rounded-2xl bg-black/70 backdrop-blur-md border border-gray-500/30">
+                              <span className="text-xl font-black text-gray-300 tracking-wider">
                                 TIE
                               </span>
-                            );
-                          }
-                          return isWinner ? (
-                            <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs font-bold flex items-center gap-1">
-                              <span>🏆</span> WINNER
+                            </div>
+                          );
+                        }
+                        return isWinner ? (
+                          <div className="px-5 py-3 rounded-2xl bg-green-500/20 backdrop-blur-md border border-green-400/40 flex items-center gap-2">
+                            <span className="text-2xl">🏆</span>
+                            <span className="text-lg font-black text-green-400 tracking-wider">
+                              WINNER
                             </span>
-                          ) : (
-                            <span className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-xs font-bold">
+                          </div>
+                        ) : (
+                          <div className="px-5 py-3 rounded-2xl bg-red-500/20 backdrop-blur-md border border-red-400/40">
+                            <span className="text-lg font-black text-red-400 tracking-wider">
                               SLOWER
                             </span>
-                          );
-                        })()}
-                      </motion.div>
-                    )}
-                  </div>
+                          </div>
+                        );
+                      })()}
+                    </motion.div>
+                  )}
 
                   {/* Taskbar */}
-                  <div className="h-6 bg-black/50 backdrop-blur-sm flex items-center justify-center gap-1 px-2">
+                  <div className="absolute bottom-0 inset-x-0 h-6 bg-black/50 backdrop-blur-sm flex items-center justify-center gap-1 px-2">
                     <div className="flex items-center gap-1">
                       <div
                         className="w-1.5 h-1.5 rounded-full animate-pulse"
@@ -229,36 +203,10 @@ export default function LaptopScreen({
           </div>
         </div>
 
-        {/* Laptop base / keyboard area */}
+        {/* Laptop base / keyboard */}
         <div className="absolute -bottom-2 left-[5%] right-[5%] h-2 bg-gray-700 rounded-b-xl" />
         <div className="absolute -bottom-3 left-[15%] right-[15%] h-1 bg-gray-600 rounded-b-lg" />
       </div>
     </div>
   );
-}
-
-function getAppLogo(icon: string): string {
-  const logos: Record<string, string> = {
-    power: "⏻",
-    globe: "🌐",
-    code: "</>",
-    smartphone: "📱",
-    image: "🖼",
-    aperture: "◎",
-    film: "🎬",
-    box: "📦",
-    "file-text": "📄",
-    table: "📊",
-    video: "📹",
-    blocks: "🧱",
-    car: "🚗",
-    target: "◎",
-    cpu: "⚡",
-    crosshair: "⊕",
-    swords: "⚔",
-    paintbrush: "🎨",
-    sparkles: "✨",
-    "message-square": "💬",
-  };
-  return logos[icon] || "▶";
 }
