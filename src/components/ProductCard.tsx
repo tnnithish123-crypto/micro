@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Laptop,
   Star,
   GitCompareArrows,
   Heart,
@@ -95,10 +94,11 @@ export default function ProductCard({ product, index = 0 }: ProductCardProps) {
 
       {/* Image area */}
       <div className="relative h-48 bg-gradient-to-br from-hp-blue-light via-hp-blue/10 to-hp-navy/5 flex items-center justify-center overflow-hidden group-hover:scale-105 transition-transform duration-500">
-        <Laptop
-          size={72}
-          className="text-hp-blue/40 group-hover:text-hp-blue/60 transition-colors duration-300"
-          strokeWidth={1}
+        <img
+          src={product.images.front}
+          alt={product.name}
+          className="w-full h-full object-contain p-4"
+          loading="lazy"
         />
         {/* Decorative circles */}
         <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-hp-blue/5" />

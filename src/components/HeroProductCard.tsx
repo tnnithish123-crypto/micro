@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
-  Laptop,
   Cpu,
   HardDrive,
   Monitor,
@@ -64,10 +63,11 @@ export default function HeroProductCard({ product }: HeroProductCardProps) {
       <div className="flex flex-col lg:flex-row">
         {/* Left – Image area */}
         <div className="relative w-full lg:w-[45%] min-h-[280px] sm:min-h-[340px] bg-gradient-to-br from-blue-50 via-hp-blue/5 to-cyan-50 flex flex-col items-center justify-center overflow-hidden">
-          <Laptop
-            size={120}
-            className="text-hp-blue/30 group-hover:text-hp-blue/50 transition-colors duration-500"
-            strokeWidth={1}
+          <img
+            src={product.images.front}
+            alt={product.name}
+            className="w-full h-full object-contain p-6"
+            loading="lazy"
           />
           <span className="mt-3 text-xs font-medium text-hp-gray-400 tracking-wide uppercase">
             360° View

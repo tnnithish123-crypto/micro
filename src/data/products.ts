@@ -41,8 +41,100 @@ export interface Product {
   newArrival?: boolean;
 }
 
+const HP_CDN = 'https://hp.widen.net/content';
+
+const productImages: Record<string, { front: string; side: string; open: string; keyboard: string; back: string; lifestyle: string }> = {
+  'omnibook-ultra-14': {
+    front: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00`,
+    side: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00&x=20`,
+    open: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00&x=40`,
+    keyboard: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00&x=60`,
+    back: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00&x=80`,
+    lifestyle: `${HP_CDN}/dd19whd7px/webp/dd19whd7px.png?w=600&dpi=72&color=ffffff00&x=100`,
+  },
+  'omnibook-x-flip-14': {
+    front: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00`,
+    side: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00&x=20`,
+    open: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00&x=40`,
+    keyboard: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00&x=60`,
+    back: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00&x=80`,
+    lifestyle: `${HP_CDN}/5pgfvgvwwh/webp/5pgfvgvwwh.png?w=600&dpi=72&color=ffffff00&x=100`,
+  },
+  'omnibook-7': {
+    front: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+    side: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+    open: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+    keyboard: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+    back: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+    lifestyle: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops-and-2-in-1s/omnibook-7-ai-pc/HP-OmniBook-716-AIPC@2x.png`,
+  },
+  'omnibook-5-14': {
+    front: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00`,
+    side: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00&x=20`,
+    open: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00&x=40`,
+    keyboard: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00&x=60`,
+    back: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00&x=80`,
+    lifestyle: `${HP_CDN}/b81p1av_1/webp/b81p1av_1.png?w=600&dpi=72&color=ffffff00&x=100`,
+  },
+  'omnibook-5-16': {
+    front: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00`,
+    side: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00&x=20`,
+    open: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00&x=40`,
+    keyboard: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00&x=60`,
+    back: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00&x=80`,
+    lifestyle: `${HP_CDN}/b44pqav_1/webp/b44pqav_1.png?w=600&dpi=72&color=ffffff00&x=100`,
+  },
+  'omnibook-3': {
+    front: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    side: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    open: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    keyboard: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    back: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    lifestyle: `https://www.hp.com/ch-en/shop/media/catalog/product/h/p/hp-omnibook-3-15.6-inch-laptop-next-gen-ai-pc-ottomario-glacier-silver-front_cus_2_2.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+  },
+  'elitebook-x-g2': {
+    front: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-sleek-thin@2x.png`,
+    side: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-sleek-thin@2x.png`,
+    open: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-top-view@2x.jpg`,
+    keyboard: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-sleek-thin@2x.png`,
+    back: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-sleek-thin@2x.png`,
+    lifestyle: `https://www.hp.com/content/dam/sites/worldwide/personal-computers/consumer/laptops/bussiness/elitebooks/x-series/x-series-refresh/elitebook-x-g2i-sleek-thin@2x.png`,
+  },
+  'probook-4-g1ir': {
+    front: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    side: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    open: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    keyboard: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    back: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+    lifestyle: `https://www.hp.com/nl-nl/shop/media/catalog/product/2/a/2a9a0c5e-748c-4d74-8c4c-9fb28c6c535a.png?image-type=image&auto=avif&quality=100&format=jpg&bg-color=ffffff&type=image-product&width=600&fit=bounds`,
+  },
+  'omen-16-ai': {
+    front: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+    side: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+    open: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+    keyboard: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+    back: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+    lifestyle: `https://www.hp.com/content/dam/sites/garage-press/press/press-kits/2026/hp-at-ces-2026/gaming-products/HX_OMEN_16_ShadowBlack_Front.png`,
+  },
+  'victus-15': {
+    front: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00`,
+    side: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00&x=20`,
+    open: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00&x=40`,
+    keyboard: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00&x=60`,
+    back: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00&x=80`,
+    lifestyle: `${HP_CDN}/sgqtogy6xp/webp/sgqtogy6xp.png?w=600&h=430&dpi=72&color=ffffff00&x=100`,
+  },
+};
+
 function img(id: string) {
-  return { front: `/images/products/${id}-front.jpg`, side: `/images/products/${id}-side.jpg`, open: `/images/products/${id}-open.jpg`, keyboard: `/images/products/${id}-keyboard.jpg`, back: `/images/products/${id}-back.jpg`, lifestyle: `/images/products/${id}-lifestyle.jpg` };
+  return productImages[id] || {
+    front: `/images/products/${id}-front.jpg`,
+    side: `/images/products/${id}-side.jpg`,
+    open: `/images/products/${id}-open.jpg`,
+    keyboard: `/images/products/${id}-keyboard.jpg`,
+    back: `/images/products/${id}-back.jpg`,
+    lifestyle: `/images/products/${id}-lifestyle.jpg`,
+  };
 }
 
 const usbA = 'USB-A 3.2 Gen 1';

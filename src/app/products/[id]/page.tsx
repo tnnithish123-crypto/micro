@@ -10,7 +10,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import {
-  Laptop,
   CheckCircle,
   Sparkles,
   ShoppingCart,
@@ -243,7 +242,11 @@ export default function ProductDetailPage() {
                 transition={{ duration: 0.25 }}
                 className="aspect-video rounded-2xl bg-gradient-to-br from-hp-blue/5 to-hp-navy/5 flex items-center justify-center mb-4 relative overflow-hidden"
               >
-                <Laptop className="w-32 h-32 sm:w-48 sm:h-48 text-hp-blue/20" />
+                <img
+                  src={product.images.front}
+                  alt={product.name}
+                  className="w-full h-full object-contain p-8"
+                />
                 <span className="absolute bottom-4 right-4 text-sm font-medium text-hp-gray-400 bg-white/70 backdrop-blur-sm px-3 py-1 rounded-full">
                   {viewAngle} View
                 </span>
