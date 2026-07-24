@@ -10,9 +10,10 @@ import {
   Menu,
   X,
   Laptop,
-  ChevronDown,
+  GitCompareArrows,
 } from "lucide-react";
-import { useWishlist } from "@/components/AppProviders";
+import { useWishlist, useCompare } from "@/components/AppProviders";
+import CompareSelectionModal from "./CompareSelectionModal";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -24,8 +25,10 @@ const navLinks = [
 export function Navbar() {
   const pathname = usePathname();
   const { getWishlistCount } = useWishlist();
+  const { getCompareCount } = useCompare();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [showCompareModal, setShowCompareModal] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -49,6 +52,7 @@ export function Navbar() {
   }, [mobileOpen]);
 
   const wishlistCount = getWishlistCount();
+  const compareCount = getCompareCount();
 
   return (
     <>
@@ -108,6 +112,19 @@ export function Navbar() {
                 <Search className="h-5 w-5" />
               </Link>
 
+              <button
+                onClick={() => setShowCompareModal(true)}
+                className="relative rounded-lg p-2 text-hp-gray-500 transition-colors hover:bg-hp-gray-100 hover:text-hp-blue"
+                title="Compare Products"
+              >
+                <GitCompareArrows className="h-5 w-5" />
+                {compareCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-hp-blue text-[10px] font-bold text-white">
+                    {compareCount}
+                  </span>
+                )}
+              </button>
+
               <Link
                 href="/wishlist"
                 className="relative rounded-lg p-2 text-hp-gray-500 transition-colors hover:bg-hp-gray-100 hover:text-hp-blue"
@@ -135,6 +152,12 @@ export function Navbar() {
 
       {/* Spacer */}
       <div className="h-16" />
+
+      {/* Compare Selection Modal */}
+      <CompareSelectionModal
+        isOpen={showCompareModal}
+        onClose={() => setShowCompareModal(false)}
+      />
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -201,6 +224,25 @@ export function Navbar() {
                         </motion.div>
                       );
                     })}
+                  </div>
+
+                  {/* Mobile Compare Button */}
+                  <div className="mt-4">
+                    <button
+                      onClick={() => {
+                        setMobileOpen(false);
+                        setShowCompareModal(true);
+                      }}
+                      className="flex items-center gap-3 w-full rounded-lg px-4 py-3 text-sm font-medium text-hp-blue bg-hp-blue-light hover:bg-hp-blue/10 transition-colors"
+                    >
+                      <GitCompareArrows size={18} />
+                      Compare Products
+                      {compareCount > 0 && (
+                        <span className="ml-auto rounded-full bg-hp-blue px-2 py-0.5 text-[10px] font-bold text-white">
+                          {compareCount}
+                        </span>
+                      )}
+                    </button>
                   </div>
 
                   <div className="mt-6 border-t border-hp-gray-100 pt-4">

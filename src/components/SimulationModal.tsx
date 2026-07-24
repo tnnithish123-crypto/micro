@@ -46,7 +46,7 @@ const APPS: AppDefinition[] = [
   { id: "pixlr", simulatorId: "pixlr", name: "Pixlr", category: "creative", color: "#00c853", icon: "Px", logo: "https://pixlr.com/favicon.ico" },
 ];
 
-type Phase = "selecting" | "splash" | "running" | "complete";
+type Phase = "selecting" | "splash" | "running" | "winner" | "complete";
 
 interface CompletedTest {
   appId: string;
@@ -89,6 +89,7 @@ export default function SimulationModal({
   const tier2 = getPerformanceTier(laptop2);
 
   const isTestRunning = phase === "running" && activeApp !== null;
+  const isBusy = isTestRunning || phase === "winner";
   const isSplash = phase === "splash" && activeApp !== null;
 
   const handleAppClick = useCallback(
@@ -117,32 +118,31 @@ export default function SimulationModal({
     if (!activeApp) return;
     if (timerRef.current) clearInterval(timerRef.current);
 
+    const t1 = calculateTestTime(laptop1, activeApp);
+    const t2 = calculateTestTime(laptop2, activeApp);
+    const winner = t1 < t2 ? 0 : t2 < t1 ? 1 : -1;
+
     setCompletedTests((prev) => [
       ...prev,
       {
         appId: activeApp,
-        time1: calculateTestTime(laptop1, activeApp),
-        time2: calculateTestTime(laptop2, activeApp),
-        winner:
-          calculateTestTime(laptop1, activeApp) <
-          calculateTestTime(laptop2, activeApp)
-            ? 0
-            : calculateTestTime(laptop2, activeApp) <
-                calculateTestTime(laptop1, activeApp)
-              ? 1
-              : -1,
+        time1: t1,
+        time2: t2,
+        winner,
         metrics1: metricsRef1.current,
         metrics2: metricsRef2.current,
       },
     ]);
 
+    setPhase("winner");
+    setElapsedTime(0);
+    metricsRef1.current = null;
+    metricsRef2.current = null;
+
     setTimeout(() => {
       setActiveApp(null);
       setPhase("selecting");
-      setElapsedTime(0);
-      metricsRef1.current = null;
-      metricsRef2.current = null;
-    }, 600);
+    }, 2500);
   }, [activeApp, laptop1, laptop2]);
 
   useEffect(() => {
@@ -161,6 +161,7 @@ export default function SimulationModal({
 
   const l1Wins = completedTests.filter((t) => t.winner === 0).length;
   const l2Wins = completedTests.filter((t) => t.winner === 1).length;
+  const lastTest = completedTests.length > 0 ? completedTests[completedTests.length - 1] : null;
 
   if (!isOpen) return null;
 
@@ -173,7 +174,7 @@ export default function SimulationModal({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-1 sm:p-3"
-        onClick={(e) => e.target === e.currentTarget && !isTestRunning && onClose()}
+        onClick={(e) => e.target === e.currentTarget && !isBusy && onClose()}
       >
         <motion.div
           initial={{ scale: 0.92, opacity: 0 }}
@@ -189,18 +190,26 @@ export default function SimulationModal({
               </div>
               <div>
                 <h2 className="text-sm font-bold text-white">
-                  {isTestRunning
-                    ? `Testing: ${activeAppDef?.name}`
-                    : isSplash
-                      ? `Opening: ${activeAppDef?.name}...`
-                      : "Performance Simulation"}
+                  {phase === "winner"
+                    ? `${activeAppDef?.name} — Test Complete`
+                    : isTestRunning
+                      ? `Testing: ${activeAppDef?.name}`
+                      : isSplash
+                        ? `Opening: ${activeAppDef?.name}...`
+                        : "Performance Simulation"}
                 </h2>
                 <p className="text-[10px] text-gray-400">
-                  {isTestRunning
-                    ? "Interact with both apps, then click Complete"
-                    : isSplash
-                      ? "Launching application on both laptops"
-                      : "Select an app to open on both laptops"}
+                  {phase === "winner"
+                    ? lastTest?.winner === 0
+                      ? `${laptop1.name.split(" ").slice(-1)[0]} wins this test`
+                      : lastTest?.winner === 1
+                        ? `${laptop2.name.split(" ").slice(-1)[0]} wins this test`
+                        : "It's a tie!"
+                    : isTestRunning
+                      ? "Interact with both apps, then click Complete"
+                      : isSplash
+                        ? "Launching application on both laptops"
+                        : "Select an app to open on both laptops"}
                 </p>
               </div>
             </div>
@@ -269,6 +278,7 @@ export default function SimulationModal({
                 onAppClick={handleAppClick}
                 onMetricsUpdate={(m) => { metricsRef1.current = m; }}
                 laptopIndex={0}
+                lastTestWinner={lastTest?.winner}
               />
 
               <div className="hidden sm:flex flex-col items-center justify-center gap-1 text-gray-600 shrink-0 w-6">
@@ -288,6 +298,7 @@ export default function SimulationModal({
                 onAppClick={handleAppClick}
                 onMetricsUpdate={(m) => { metricsRef2.current = m; }}
                 laptopIndex={1}
+                lastTestWinner={lastTest?.winner}
               />
             </div>
 
@@ -295,11 +306,16 @@ export default function SimulationModal({
             <div className="shrink-0 bg-gray-900 border-t border-gray-800 px-3 sm:px-5 py-2.5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
-                  {isTestRunning ? "Apps Tested" : "Available Apps"}
+                  {isTestRunning ? "Apps Tested" : phase === "winner" ? "Result" : "Available Apps"}
                 </span>
                 {isTestRunning && (
                   <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[9px] text-green-400 font-bold">
                     ● LIVE
+                  </motion.span>
+                )}
+                {phase === "winner" && (
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[9px] text-amber-400 font-bold">
+                    ● RESULT
                   </motion.span>
                 )}
               </div>
@@ -399,6 +415,7 @@ function LaptopFrame({
   onAppClick,
   onMetricsUpdate,
   laptopIndex,
+  lastTestWinner,
 }: {
   name: string;
   tier: PerformanceTier;
@@ -410,6 +427,7 @@ function LaptopFrame({
   onAppClick: (appId: string) => void;
   onMetricsUpdate: (m: MetricsData) => void;
   laptopIndex: 0 | 1;
+  lastTestWinner?: number | null;
 }) {
   const activeAppDef = activeApp ? apps.find((a) => a.id === activeApp) : null;
   const splashDuration = tier === "high" ? 1200 : tier === "medium" ? 2200 : 3500;
@@ -476,6 +494,57 @@ function LaptopFrame({
             />
           </div>
         )}
+
+        {/* Winner Overlay */}
+        <AnimatePresence>
+          {phase === "winner" && activeAppDef && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm"
+            >
+              {lastTestWinner === laptopIndex ? (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-400 to-emerald-500 flex items-center justify-center shadow-lg shadow-green-500/30 mb-3">
+                    <Trophy size={28} className="text-white" />
+                  </div>
+                  <span className="text-lg font-bold text-green-400">WINNER</span>
+                  <span className="text-xs text-gray-400 mt-1">Faster performance on this test</span>
+                </motion.div>
+              ) : lastTestWinner !== undefined && lastTestWinner !== null ? (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center shadow-lg mb-3">
+                    <span className="text-2xl text-gray-300">2nd</span>
+                  </div>
+                  <span className="text-sm font-bold text-gray-400">Slower on this test</span>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                  className="flex flex-col items-center"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg mb-3">
+                    <span className="text-2xl text-white">=</span>
+                  </div>
+                  <span className="text-sm font-bold text-amber-400">TIE</span>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

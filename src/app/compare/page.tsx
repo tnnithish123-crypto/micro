@@ -5,9 +5,10 @@ import { products, type Product } from "@/data/products";
 import { useCompare } from "@/components/AppProviders";
 import ProductCard from "@/components/ProductCard";
 import SimulationModal from "@/components/SimulationModal";
+import CompareSelectionModal from "@/components/CompareSelectionModal";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { X, Plus, Trash2, CheckCircle, ArrowLeft, Laptop, Zap } from "lucide-react";
+import { X, Plus, Trash2, CheckCircle, ArrowLeft, Laptop, Zap, Crown, Star, TrendingUp, ShoppingCart, Cpu, MemoryStick } from "lucide-react";
 
 interface SpecRow {
   label: string;
@@ -230,6 +231,7 @@ export default function ComparePage() {
   const { items, removeFromCompare, clearCompare } = useCompare();
   const [showSuggestions, setShowSuggestions] = useState(true);
   const [showSimulation, setShowSimulation] = useState(false);
+  const [showSelectionModal, setShowSelectionModal] = useState(false);
 
   const comparedProducts = useMemo(() => {
     return items
@@ -257,6 +259,25 @@ export default function ComparePage() {
     return allBests;
   }, [comparedProducts]);
 
+  const bestToBuy = useMemo(() => {
+    if (comparedProducts.length < 2) return null;
+    const scores = comparedProducts.map((p) => {
+      let score = 0;
+      score += p.rating * 10;
+      score += Math.min(p.reviews / 100, 10);
+      const perfScore = (p.ram * 2) + (p.price < 100000 ? 15 : p.price < 150000 ? 10 : 5);
+      score += perfScore;
+      if (p.gpu.includes("RTX 50")) score += 15;
+      else if (p.gpu.includes("RTX 40")) score += 12;
+      else if (p.gpu.includes("RTX")) score += 8;
+      const valueScore = (100 - (p.price / 2000)) * 0.3;
+      score += Math.max(0, valueScore);
+      return { product: p, score: Math.round(score) };
+    });
+    scores.sort((a, b) => b.score - a.score);
+    return scores[0];
+  }, [comparedProducts]);
+
   if (comparedProducts.length === 0) {
     return (
       <div className="min-h-screen">
@@ -269,24 +290,24 @@ export default function ComparePage() {
             <span className="text-hp-navy font-medium">Compare</span>
           </nav>
 
-          <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
             <div className="w-24 h-24 rounded-full bg-hp-blue-light flex items-center justify-center mb-6">
               <Laptop size={48} className="text-hp-blue" />
             </div>
             <h1 className="text-3xl font-bold text-hp-navy mb-3">
-              No Products to Compare
+              Compare Laptops Side by Side
             </h1>
             <p className="text-hp-gray-500 text-sm max-w-md mb-8">
-              Add up to 4 laptops to see a detailed side-by-side comparison of
-              specifications, features, and pricing.
+              Select 2–4 laptops to see a detailed comparison of specifications,
+              features, pricing, and run interactive performance simulations.
             </p>
-            <Link
-              href="/collection"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-hp-blue text-white rounded-xl font-medium hover:bg-hp-blue-dark transition-colors"
+            <button
+              onClick={() => setShowSelectionModal(true)}
+              className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold hover:from-blue-600 hover:to-indigo-700 transition-all shadow-lg shadow-blue-500/25"
             >
-              <ArrowLeft size={16} />
-              Browse Collection
-            </Link>
+              <Plus size={16} />
+              Select Products to Compare
+            </button>
           </div>
 
           {suggestions.length > 0 && (
@@ -310,6 +331,11 @@ export default function ComparePage() {
             </section>
           )}
         </div>
+
+        <CompareSelectionModal
+          isOpen={showSelectionModal}
+          onClose={() => setShowSelectionModal(false)}
+        />
       </div>
     );
   }
@@ -337,13 +363,13 @@ export default function ComparePage() {
           </div>
           <div className="flex gap-3">
             {comparedProducts.length < 4 && (
-              <Link
-                href="/collection"
+              <button
+                onClick={() => setShowSelectionModal(true)}
                 className="inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-hp-blue border border-hp-blue/30 rounded-xl hover:bg-hp-blue/5 transition-colors"
               >
                 <Plus size={16} />
                 Add More
-              </Link>
+              </button>
             )}
             <button
               onClick={clearCompare}
@@ -417,6 +443,69 @@ export default function ComparePage() {
           </table>
         </div>
 
+        {/* Best to Buy Recommendation */}
+        {bestToBuy && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="mt-8"
+          >
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 border border-amber-200 p-6 sm:p-8">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-bl from-amber-400/15 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-32 h-32 bg-gradient-to-tr from-yellow-400/15 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+              <div className="relative flex flex-col sm:flex-row items-center gap-5">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
+                  <Crown size={28} className="text-white" />
+                </div>
+                <div className="text-center sm:text-left flex-1">
+                  <div className="flex items-center gap-2 justify-center sm:justify-start mb-1">
+                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      Best to Buy
+                    </span>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map((i) => (
+                        <Star
+                          key={i}
+                          size={12}
+                          className={i <= Math.round(bestToBuy.product.rating) ? "text-amber-400 fill-amber-400" : "text-gray-300"}
+                        />
+                      ))}
+                      <span className="text-xs text-gray-500 ml-1">{bestToBuy.product.rating}</span>
+                    </div>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {bestToBuy.product.name}
+                  </h3>
+                  <p className="text-sm text-gray-600 mb-2">
+                    Score: <span className="font-bold text-amber-600">{bestToBuy.score}/100</span> — Best overall value based on performance, price, features, and user reviews.
+                  </p>
+                  <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-600 bg-white/80 px-2 py-1 rounded-lg">
+                      <Cpu size={12} className="text-blue-500" />
+                      {bestToBuy.product.processor.split(" ").slice(-2).join(" ")}
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-600 bg-white/80 px-2 py-1 rounded-lg">
+                      <MemoryStick size={12} className="text-purple-500" />
+                      {bestToBuy.product.ram}GB RAM
+                    </span>
+                    <span className="inline-flex items-center gap-1 text-xs text-gray-600 bg-white/80 px-2 py-1 rounded-lg">
+                      ₹{bestToBuy.product.price.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                </div>
+                <a
+                  href={`/products/${bestToBuy.product.id}`}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-semibold hover:from-amber-600 hover:to-orange-600 transition-all shadow-lg shadow-amber-500/25 shrink-0"
+                >
+                  <ShoppingCart size={16} />
+                  View Details
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Performance Simulation Button */}
         {comparedProducts.length >= 2 && (
           <motion.div
@@ -437,9 +526,9 @@ export default function ComparePage() {
                     Interactive Performance Simulation
                   </h3>
                   <p className="text-sm text-gray-500">
-                    Run {33} real-world benchmarks side by side — system boot, creative apps,
-                    gaming FPS, AI workloads, and more. See live CPU, GPU, RAM, and temperature
-                    metrics in real time.
+                    Open 10 professional apps side by side — Photoshop, Premiere Pro, VS Code,
+                    Blender, Canva, Figma, Word, CapCut, Photopea, and Pixlr. See which laptop
+                    performs better with live CPU, GPU, RAM, and FPS metrics.
                   </p>
                 </div>
                 <button
@@ -463,6 +552,11 @@ export default function ComparePage() {
           onClose={() => setShowSimulation(false)}
           laptop1={comparedProducts[0]}
           laptop2={comparedProducts[1]}
+        />
+
+        <CompareSelectionModal
+          isOpen={showSelectionModal}
+          onClose={() => setShowSelectionModal(false)}
         />
       </div>
     </div>
