@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { type BenchmarkMetrics } from "@/data/benchmarkData";
 
 export interface MetricsData {
   timeElapsed: number;
@@ -8,121 +9,89 @@ export interface MetricsData {
   responsiveness: number;
   cpuUsage: number;
   gpuUsage: number;
-  ramUsage: number;
+  ramUsed: number;
   temperature: number;
   fanSpeed: number;
   fps: number;
+  responseTime: number;
 }
 
 interface MetricsOverlayProps {
-  tier: "high" | "medium" | "low";
+  benchmark: BenchmarkMetrics | null;
   isActive: boolean;
   laptopIndex: 0 | 1;
   accentColor: string;
+  totalRam: number;
   onMetricsUpdate?: (metrics: MetricsData) => void;
 }
 
-function useSimulatedMetrics(
-  tier: "high" | "medium" | "low",
-  isActive: boolean
+function useBenchmarkMetrics(
+  benchmark: BenchmarkMetrics | null,
+  isActive: boolean,
+  totalRam: number
 ): { metrics: MetricsData; trackInteraction: () => void } {
   const [metrics, setMetrics] = useState<MetricsData>({
     timeElapsed: 0,
     interactionCount: 0,
     responsiveness: 95,
-    cpuUsage: 5,
-    gpuUsage: 3,
-    ramUsage: 15,
+    cpuUsage: 0,
+    gpuUsage: 0,
+    ramUsed: 0,
     temperature: 38,
     fanSpeed: 0,
-    fps: 60,
+    fps: 0,
+    responseTime: 12,
   });
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const interactionsRef = useRef(0);
 
   useEffect(() => {
-    if (!isActive) {
+    if (!isActive || !benchmark) {
       if (intervalRef.current) clearInterval(intervalRef.current);
       return;
     }
 
     interactionsRef.current = 0;
 
-    const tierFactor =
-      tier === "high" ? 1.0 : tier === "medium" ? 0.7 : 0.4;
+    const targetCpu = benchmark.cpuUsage;
+    const targetGpu = benchmark.gpuUsage;
+    const targetRam = benchmark.ramUsed;
+    const targetTemp = benchmark.temperature;
+    const targetFan = benchmark.fanSpeed;
+    const targetFps = benchmark.fps;
+    const targetResponse = benchmark.response;
+
+    let t = 0;
 
     intervalRef.current = setInterval(() => {
-      setMetrics((prev) => {
-        const t = prev.timeElapsed + 0.5;
-        const baseCpu = tier === "high" ? 25 : tier === "medium" ? 40 : 65;
-        const baseGpu = tier === "high" ? 15 : tier === "medium" ? 30 : 55;
-        const baseRam = tier === "high" ? 20 : tier === "medium" ? 35 : 55;
-        const baseTemp = tier === "high" ? 42 : tier === "medium" ? 52 : 65;
+      t += 0.3;
+      const rampUp = Math.min(1, t / 1.5);
+      const jitter = () => (Math.random() - 0.5) * 3;
 
-        const jitter = () => (Math.random() - 0.5) * 6;
-        const wave = Math.sin(t * 0.3) * 5;
-
-        const cpuUsage = Math.min(
-          98,
-          Math.max(3, baseCpu + wave + jitter())
-        );
-        const gpuUsage = Math.min(
-          98,
-          Math.max(2, baseGpu + wave * 0.7 + jitter())
-        );
-        const ramUsage = Math.min(
-          95,
-          Math.max(10, baseRam + t * 0.3 + jitter() * 0.5)
-        );
-        const temperature = Math.min(
-          92,
-          Math.max(35, baseTemp + t * 0.15 + jitter() * 0.3)
-        );
-        const fanSpeed = Math.min(
-          100,
-          Math.max(0, temperature > 55 ? (temperature - 55) * 2.5 : 0)
-        );
-        const fps = Math.max(
-          15,
-          Math.min(
-            120,
-            (tier === "high" ? 90 : tier === "medium" ? 60 : 30) +
-              jitter() * 2
-          )
-        );
-        const responsiveness = Math.max(
-          20,
-          Math.min(100, 95 - (cpuUsage - 30) * 0.5 + jitter() * 0.5)
-        );
-
-        return {
-          timeElapsed: Math.round(t * 10) / 10,
-          interactionCount: interactionsRef.current,
-          responsiveness: Math.round(responsiveness * 10) / 10,
-          cpuUsage: Math.round(cpuUsage * 10) / 10,
-          gpuUsage: Math.round(gpuUsage * 10) / 10,
-          ramUsage: Math.round(ramUsage * 10) / 10,
-          temperature: Math.round(temperature * 10) / 10,
-          fanSpeed: Math.round(fanSpeed * 10) / 10,
-          fps: Math.round(fps),
-        };
-      });
-    }, 500);
+      setMetrics((prev) => ({
+        timeElapsed: Math.round(t * 10) / 10,
+        interactionCount: interactionsRef.current,
+        responsiveness: Math.round(Math.max(20, Math.min(100, 100 - targetResponse * 0.5 + jitter())) * 10) / 10,
+        cpuUsage: Math.round((targetCpu * rampUp + jitter() * rampUp) * 10) / 10,
+        gpuUsage: Math.round((targetGpu * rampUp + jitter() * rampUp) * 10) / 10,
+        ramUsed: Math.round((targetRam * rampUp + jitter() * 0.2 * rampUp) * 10) / 10,
+        temperature: Math.round((35 + (targetTemp - 35) * rampUp + jitter() * 0.3) * 10) / 10,
+        fanSpeed: Math.round((targetFan * rampUp + jitter() * rampUp) * 10) / 10,
+        fps: Math.round(targetFps * rampUp + jitter() * 2 * rampUp),
+        responseTime: Math.round(targetResponse + jitter() * 0.5),
+      }));
+    }, 300);
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isActive, tier]);
+  }, [isActive, benchmark]);
 
   const trackInteraction = () => {
     interactionsRef.current += 1;
     setMetrics((prev) => ({
       ...prev,
       interactionCount: interactionsRef.current,
-      responsiveness: Math.min(
-        100,
-        prev.responsiveness + (tier === "high" ? 2 : tier === "medium" ? 1 : -1)
-      ),
     }));
   };
 
@@ -130,13 +99,14 @@ function useSimulatedMetrics(
 }
 
 export default function MetricsOverlay({
-  tier,
+  benchmark,
   isActive,
   laptopIndex,
   accentColor,
+  totalRam,
   onMetricsUpdate,
 }: MetricsOverlayProps) {
-  const { metrics, trackInteraction } = useSimulatedMetrics(tier, isActive);
+  const { metrics, trackInteraction } = useBenchmarkMetrics(benchmark, isActive, totalRam);
 
   useEffect(() => {
     if (onMetricsUpdate) onMetricsUpdate(metrics);
@@ -149,6 +119,8 @@ export default function MetricsOverlay({
     if (value >= thresholds[0]) return "bg-yellow-400";
     return "bg-green-400";
   };
+
+  const ramPercent = totalRam > 0 ? Math.min(100, (metrics.ramUsed / totalRam) * 100) : 0;
 
   return (
     <div
@@ -188,9 +160,9 @@ export default function MetricsOverlay({
           />
           <MetricItem
             label="RAM"
-            value={`${metrics.ramUsage.toFixed(0)}%`}
-            bar={metrics.ramUsage}
-            barColor={getBarColor(metrics.ramUsage, [55, 80])}
+            value={`${metrics.ramUsed.toFixed(1)} GB`}
+            bar={ramPercent}
+            barColor={getBarColor(ramPercent, [55, 80])}
           />
           <MetricItem
             label="FPS"
@@ -212,12 +184,12 @@ export default function MetricsOverlay({
           />
           <MetricItem
             label="Resp"
-            value={`${metrics.responsiveness.toFixed(0)}%`}
-            bar={metrics.responsiveness}
+            value={`${metrics.responseTime} ms`}
+            bar={Math.min(100, (1 - metrics.responseTime / 50) * 100)}
             barColor={
-              metrics.responsiveness < 40
+              metrics.responseTime > 30
                 ? "bg-red-400"
-                : metrics.responsiveness < 70
+                : metrics.responseTime > 18
                   ? "bg-yellow-400"
                   : "bg-green-400"
             }

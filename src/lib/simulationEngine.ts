@@ -1,4 +1,11 @@
 import { type Product } from "@/data/products";
+import { getBenchmarkData, type BenchmarkMetrics } from "@/data/benchmarkData";
+
+// ---------------------------------------------------------------------------
+// Re-export benchmark types
+// ---------------------------------------------------------------------------
+
+export type { BenchmarkMetrics };
 
 // ---------------------------------------------------------------------------
 // Interfaces
@@ -232,6 +239,30 @@ export function calculateTestMetrics(
   testType: string,
   progress: number,
 ): LaptopMetrics {
+  const bench = getBenchmarkData(product.id, testType);
+
+  if (bench) {
+    const jitter = (p: number) => {
+      const s = `${product.id}-${testType}-${Math.floor(p * 100)}`;
+      return seededRandom(s, -3, 3);
+    };
+    const rampUp = Math.min(1, progress * 3);
+    const rampDown = progress > 0.85 ? 1 - (progress - 0.85) / 0.15 : 1;
+    const factor = rampUp * rampDown;
+    const j = () => jitter(progress);
+
+    return {
+      cpuUsage: Math.round(Math.max(1, bench.cpuUsage * factor + j()) * 10) / 10,
+      gpuUsage: Math.round(Math.max(1, bench.gpuUsage * factor + j()) * 10) / 10,
+      ramUsage: Math.round(bench.ramUsed / (product.ram || 16) * 100 * factor + j() * 0.5 * 10) / 10,
+      storageActivity: Math.round(Math.max(0, 20 + j()) * 10) / 10,
+      temperature: Math.round(Math.max(35, bench.temperature * (0.6 + factor * 0.4) + j()) * 10) / 10,
+      fanSpeed: Math.round(Math.max(0, bench.fanSpeed * factor + j()) * 10) / 10,
+      batteryDrain: Math.round((100 - progress * 30) * 10) / 10,
+      powerDraw: Math.round((45 + bench.cpuUsage * 0.5 + bench.gpuUsage * 0.3) * factor + j() * 10) / 10,
+    };
+  }
+
   const weights = getTestCategoryWeight(testType, product);
   const score = getPerformanceScore(product);
 
@@ -309,6 +340,9 @@ export function calculateTestMetrics(
 // ---------------------------------------------------------------------------
 
 export function calculateTestTime(product: Product, testId: string): number {
+  const bench = getBenchmarkData(product.id, testId);
+  if (bench) return bench.openTime;
+
   const test = TEST_DEFINITIONS.find((t) => t.id === testId);
   if (!test) return 10;
 

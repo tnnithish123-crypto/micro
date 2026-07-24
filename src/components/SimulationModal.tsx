@@ -8,6 +8,7 @@ import {
   calculateTestTime,
   generateFinalReport,
 } from "@/lib/simulationEngine";
+import { getBenchmarkData, BENCHMARK_DATA, type BenchmarkMetrics } from "@/data/benchmarkData";
 import AppSimulator, { type PerformanceTier } from "./simulation/AppSimulator";
 import MetricsOverlay, { type MetricsData } from "./simulation/MetricsOverlay";
 import FinalReport from "./FinalReport";
@@ -60,6 +61,12 @@ interface CompletedTest {
 }
 
 function getPerformanceTier(product: Product): PerformanceTier {
+  const bench = BENCHMARK_DATA[product.id];
+  if (bench) {
+    if (bench.tier === 'A+' || bench.tier === 'A') return "high";
+    if (bench.tier === 'B') return "medium";
+    return "low";
+  }
   const score = (product.ram || 8) + (product.price || 50000) / 15000;
   if (score >= 20) return "high";
   if (score >= 14) return "medium";
@@ -281,6 +288,8 @@ export default function SimulationModal({
                 onMetricsUpdate={(m) => { metricsRef1.current = m; }}
                 laptopIndex={0}
                 lastTestWinner={lastTest?.winner}
+                laptopId={laptop1.id}
+                totalRam={laptop1.ram}
               />
 
               <div className="hidden sm:flex flex-col items-center justify-center gap-1 text-gray-600 shrink-0 w-6">
@@ -301,6 +310,8 @@ export default function SimulationModal({
                 onMetricsUpdate={(m) => { metricsRef2.current = m; }}
                 laptopIndex={1}
                 lastTestWinner={lastTest?.winner}
+                laptopId={laptop2.id}
+                totalRam={laptop2.ram}
               />
             </div>
 
@@ -418,6 +429,8 @@ function LaptopFrame({
   onMetricsUpdate,
   laptopIndex,
   lastTestWinner,
+  laptopId,
+  totalRam,
 }: {
   name: string;
   tier: PerformanceTier;
@@ -430,6 +443,8 @@ function LaptopFrame({
   onMetricsUpdate: (m: MetricsData) => void;
   laptopIndex: 0 | 1;
   lastTestWinner?: number | null;
+  laptopId: string;
+  totalRam: number;
 }) {
   const activeAppDef = activeApp ? apps.find((a) => a.id === activeApp) : null;
   const splashDuration = tier === "high" ? 1200 : tier === "medium" ? 2200 : 3500;
@@ -488,10 +503,11 @@ function LaptopFrame({
               laptopIndex={laptopIndex}
             />
             <MetricsOverlay
-              tier={tier}
+              benchmark={getBenchmarkData(laptopId, activeApp)}
               isActive={isActive}
               laptopIndex={laptopIndex}
               accentColor={accentColor}
+              totalRam={totalRam}
               onMetricsUpdate={onMetricsUpdate}
             />
           </div>
@@ -721,6 +737,8 @@ function FinalReportOverlay({
 }) {
   const results = tests.map((t) => {
     const test = APPS.find((a) => a.id === t.appId);
+    const bench1 = getBenchmarkData(laptop1.id, t.appId);
+    const bench2 = getBenchmarkData(laptop2.id, t.appId);
     return {
       testId: t.appId,
       testName: test?.name || t.appId,
@@ -728,12 +746,16 @@ function FinalReportOverlay({
       icon: test?.icon || "box",
       laptop1Time: t.time1,
       laptop2Time: t.time2,
-      laptop1Metrics: t.metrics1
-        ? { cpuUsage: t.metrics1.cpuUsage, gpuUsage: t.metrics1.gpuUsage, ramUsage: t.metrics1.ramUsage, storageActivity: 0, temperature: t.metrics1.temperature, fanSpeed: t.metrics1.fanSpeed, batteryDrain: 0, powerDraw: 0 }
-        : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
-      laptop2Metrics: t.metrics2
-        ? { cpuUsage: t.metrics2.cpuUsage, gpuUsage: t.metrics2.gpuUsage, ramUsage: t.metrics2.ramUsage, storageActivity: 0, temperature: t.metrics2.temperature, fanSpeed: t.metrics2.fanSpeed, batteryDrain: 0, powerDraw: 0 }
-        : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
+      laptop1Metrics: bench1
+        ? { cpuUsage: bench1.cpuUsage, gpuUsage: bench1.gpuUsage, ramUsage: bench1.ramUsed, storageActivity: 0, temperature: bench1.temperature, fanSpeed: bench1.fanSpeed, batteryDrain: 0, powerDraw: 0 }
+        : t.metrics1
+          ? { cpuUsage: t.metrics1.cpuUsage, gpuUsage: t.metrics1.gpuUsage, ramUsage: t.metrics1.ramUsed, storageActivity: 0, temperature: t.metrics1.temperature, fanSpeed: t.metrics1.fanSpeed, batteryDrain: 0, powerDraw: 0 }
+          : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
+      laptop2Metrics: bench2
+        ? { cpuUsage: bench2.cpuUsage, gpuUsage: bench2.gpuUsage, ramUsage: bench2.ramUsed, storageActivity: 0, temperature: bench2.temperature, fanSpeed: bench2.fanSpeed, batteryDrain: 0, powerDraw: 0 }
+        : t.metrics2
+          ? { cpuUsage: t.metrics2.cpuUsage, gpuUsage: t.metrics2.gpuUsage, ramUsage: t.metrics2.ramUsed, storageActivity: 0, temperature: t.metrics2.temperature, fanSpeed: t.metrics2.fanSpeed, batteryDrain: 0, powerDraw: 0 }
+          : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
       winnerIndex: t.winner as 0 | 1 | -1,
       difference: Math.max(t.time1, t.time2) > 0 ? (Math.abs(t.time1 - t.time2) / Math.max(t.time1, t.time2)) * 100 : 0,
       efficiency1: "Good",
