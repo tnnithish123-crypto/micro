@@ -194,55 +194,30 @@ export function getPerformanceScore(product: Product): number {
 // ---------------------------------------------------------------------------
 
 function getTestCategoryWeight(
-  category: string,
+  testId: string,
   product: Product,
 ): { cpu: number; gpu: number; ram: number; storage: number } {
-  switch (category) {
-    case "system-boot":
-    case "windows-login":
-    case "boot-time":
-    case "shutdown":
-      return { cpu: 0.4, gpu: 0.05, ram: 0.15, storage: 0.4 };
-    case "open-chrome":
-    case "chrome-tabs-20":
-    case "video-playback":
-    case "zoom":
-      return { cpu: 0.3, gpu: 0.15, ram: 0.4, storage: 0.15 };
-    case "vscode":
-    case "android-studio":
-      return { cpu: 0.4, gpu: 0.05, ram: 0.35, storage: 0.2 };
-    case "compile-react":
-    case "compile-android":
-      return { cpu: 0.5, gpu: 0.05, ram: 0.3, storage: 0.15 };
-    case "office":
-    case "excel":
-      return { cpu: 0.3, gpu: 0.05, ram: 0.35, storage: 0.3 };
-    case "file-copy":
-    case "ssd-rw":
-      return { cpu: 0.1, gpu: 0.0, ram: 0.1, storage: 0.8 };
+  switch (testId) {
     case "photoshop":
-    case "lightroom":
-      return { cpu: 0.2, gpu: 0.4, ram: 0.3, storage: 0.1 };
-    case "premiere-export":
+      return { cpu: 0.25, gpu: 0.35, ram: 0.3, storage: 0.1 };
+    case "premiere":
       return { cpu: 0.3, gpu: 0.45, ram: 0.15, storage: 0.1 };
-    case "blender-render":
-    case "unreal-engine":
-    case "unity":
+    case "vscode":
+      return { cpu: 0.35, gpu: 0.05, ram: 0.4, storage: 0.2 };
+    case "blender":
       return { cpu: 0.25, gpu: 0.5, ram: 0.15, storage: 0.1 };
-    case "minecraft":
-    case "gta-v":
-    case "valorant":
-    case "cyberpunk-2077":
-    case "fortnite":
-    case "apex-legends":
-      return { cpu: 0.3, gpu: 0.5, ram: 0.15, storage: 0.05 };
-    case "python-ai":
-    case "ai-image-gen":
-    case "stable-diffusion":
-    case "local-llm":
-      return { cpu: 0.2, gpu: 0.5, ram: 0.25, storage: 0.05 };
-    case "battery-drain":
-      return { cpu: 0.3, gpu: 0.15, ram: 0.1, storage: 0.05 };
+    case "canva":
+      return { cpu: 0.2, gpu: 0.25, ram: 0.35, storage: 0.2 };
+    case "figma":
+      return { cpu: 0.2, gpu: 0.3, ram: 0.35, storage: 0.15 };
+    case "word":
+      return { cpu: 0.25, gpu: 0.05, ram: 0.4, storage: 0.3 };
+    case "capcut":
+      return { cpu: 0.3, gpu: 0.35, ram: 0.2, storage: 0.15 };
+    case "photopea":
+      return { cpu: 0.25, gpu: 0.35, ram: 0.3, storage: 0.1 };
+    case "pixlr":
+      return { cpu: 0.2, gpu: 0.3, ram: 0.35, storage: 0.15 };
     default:
       return { cpu: 0.3, gpu: 0.2, ram: 0.3, storage: 0.2 };
   }
@@ -373,39 +348,17 @@ export function getEfficiencyRating(value: number, isFps: boolean): string {
 // ---------------------------------------------------------------------------
 
 export const TEST_DEFINITIONS: TestDefinition[] = [
-  { id: "system-boot", name: "System Boot", category: "system", icon: "Power", description: "Cold boot from power-off to OS load", isFpsTest: false, baseTime: 22, baseFps: 0 },
-  { id: "windows-login", name: "Windows Login", category: "system", icon: "Lock", description: "Login screen to desktop ready", isFpsTest: false, baseTime: 8, baseFps: 0 },
-  { id: "open-chrome", name: "Open Chrome", category: "system", icon: "Globe", description: "Launch Google Chrome browser", isFpsTest: false, baseTime: 3, baseFps: 0 },
-  { id: "chrome-tabs-20", name: "20 Chrome Tabs", category: "system", icon: "Layers", description: "Open and load 20 Chrome tabs", isFpsTest: false, baseTime: 18, baseFps: 0 },
-  { id: "vscode", name: "VS Code Startup", category: "development", icon: "Code", description: "Launch VS Code with extensions", isFpsTest: false, baseTime: 5, baseFps: 0 },
-  { id: "android-studio", name: "Android Studio", category: "development", icon: "Smartphone", description: "Launch Android Studio IDE", isFpsTest: false, baseTime: 14, baseFps: 0 },
-  { id: "compile-react", name: "Compile React App", category: "development", icon: "Box", description: "Production build of a React app", isFpsTest: false, baseTime: 35, baseFps: 0 },
-  { id: "compile-android", name: "Compile Android", category: "development", icon: "Package", description: "Full Android project build", isFpsTest: false, baseTime: 120, baseFps: 0 },
-  { id: "photoshop", name: "Photoshop Filters", category: "creative", icon: "Image", description: "Apply complex filter chain in Photoshop", isFpsTest: false, baseTime: 12, baseFps: 0 },
-  { id: "lightroom", name: "Lightroom Export", category: "creative", icon: "Aperture", description: "Export 100 RAW photos from Lightroom", isFpsTest: false, baseTime: 60, baseFps: 0 },
-  { id: "premiere-export", name: "Premiere Export", category: "creative", icon: "Film", description: "Export 10-minute 4K video in Premiere", isFpsTest: false, baseTime: 300, baseFps: 0 },
-  { id: "blender-render", name: "Blender Render", category: "creative", icon: "Box", description: "Render complex 3D scene in Blender", isFpsTest: false, baseTime: 180, baseFps: 0 },
-  { id: "unreal-engine", name: "Unreal Engine", category: "creative", icon: "Gamepad2", description: "Unreal Engine 5 shader compile & render", isFpsTest: false, baseTime: 45, baseFps: 0 },
-  { id: "unity", name: "Unity Build", category: "creative", icon: "Box", description: "Unity project compilation and packaging", isFpsTest: false, baseTime: 50, baseFps: 0 },
-  { id: "python-ai", name: "Python AI Script", category: "ai", icon: "Brain", description: "Run ML training script in Python", isFpsTest: false, baseTime: 40, baseFps: 0 },
-  { id: "office", name: "Office Apps", category: "productivity", icon: "FileText", description: "Launch Word, Excel, PowerPoint", isFpsTest: false, baseTime: 6, baseFps: 0 },
-  { id: "excel", name: "Excel Calculation", category: "productivity", icon: "Table", description: "Process 100K row spreadsheet formulas", isFpsTest: false, baseTime: 15, baseFps: 0 },
-  { id: "file-copy", name: "File Copy", category: "system", icon: "Copy", description: "Copy 10GB file between drives", isFpsTest: false, baseTime: 45, baseFps: 0 },
-  { id: "ssd-rw", name: "SSD Read/Write", category: "system", icon: "HardDrive", description: "Sequential and random SSD benchmark", isFpsTest: false, baseTime: 20, baseFps: 0 },
-  { id: "battery-drain", name: "Battery Drain", category: "system", icon: "Battery", description: "Sustained mixed workload battery test", isFpsTest: false, baseTime: 60, baseFps: 0 },
-  { id: "video-playback", name: "Video Playback", category: "productivity", icon: "Play", description: "4K HDR video playback smoothness", isFpsTest: false, baseTime: 10, baseFps: 0 },
-  { id: "zoom", name: "Video Call", category: "productivity", icon: "Video", description: "Zoom meeting with screen share", isFpsTest: false, baseTime: 4, baseFps: 0 },
-  { id: "minecraft", name: "Minecraft", category: "gaming", icon: "Blocks", description: "Minecraft average FPS benchmark", isFpsTest: true, baseTime: 0, baseFps: 144 },
-  { id: "gta-v", name: "GTA V", category: "gaming", icon: "Car", description: "GTA V average FPS at high settings", isFpsTest: true, baseTime: 0, baseFps: 90 },
-  { id: "valorant", name: "Valorant", category: "gaming", icon: "Target", description: "Valorant competitive FPS benchmark", isFpsTest: true, baseTime: 0, baseFps: 180 },
-  { id: "cyberpunk-2077", name: "Cyberpunk 2077", category: "gaming", icon: "Cpu", description: "Cyberpunk 2077 RT Ultra FPS", isFpsTest: true, baseTime: 0, baseFps: 60 },
-  { id: "fortnite", name: "Fortnite", category: "gaming", icon: "Crosshair", description: "Fortnite competitive FPS benchmark", isFpsTest: true, baseTime: 0, baseFps: 120 },
-  { id: "apex-legends", name: "Apex Legends", category: "gaming", icon: "Swords", description: "Apex Legends average FPS benchmark", isFpsTest: true, baseTime: 0, baseFps: 100 },
-  { id: "ai-image-gen", name: "AI Image Gen", category: "ai", icon: "Paintbrush", description: "Generate AI image with Stable Diffusion", isFpsTest: false, baseTime: 25, baseFps: 0 },
-  { id: "stable-diffusion", name: "Stable Diffusion", category: "ai", icon: "Sparkles", description: "Run Stable Diffusion inference batch", isFpsTest: false, baseTime: 35, baseFps: 0 },
-  { id: "local-llm", name: "Local LLM", category: "ai", icon: "MessageSquare", description: "Run local LLM inference (7B params)", isFpsTest: false, baseTime: 20, baseFps: 0 },
-  { id: "boot-time", name: "Boot to Desktop", category: "system", icon: "Monitor", description: "Complete boot sequence timing", isFpsTest: false, baseTime: 28, baseFps: 0 },
-  { id: "shutdown", name: "Shutdown", category: "system", icon: "Power", description: "System shutdown time", isFpsTest: false, baseTime: 6, baseFps: 0 },
+  // Simulation apps (the 10 apps users can test interactively)
+  { id: "photoshop", name: "Photoshop", category: "creative", icon: "Image", description: "Adobe Photoshop image editing", isFpsTest: false, baseTime: 3.5, baseFps: 0 },
+  { id: "premiere", name: "Premiere Pro", category: "creative", icon: "Film", description: "Adobe Premiere Pro video editing", isFpsTest: false, baseTime: 5.0, baseFps: 0 },
+  { id: "vscode", name: "VS Code", category: "development", icon: "Code", description: "Visual Studio Code IDE", isFpsTest: false, baseTime: 1.8, baseFps: 0 },
+  { id: "blender", name: "Blender", category: "creative", icon: "Box", description: "Blender 3D modeling & rendering", isFpsTest: false, baseTime: 6.0, baseFps: 0 },
+  { id: "canva", name: "Canva", category: "productivity", icon: "Palette", description: "Canva graphic design", isFpsTest: false, baseTime: 2.0, baseFps: 0 },
+  { id: "figma", name: "Figma", category: "development", icon: "Pen", description: "Figma UI/UX design tool", isFpsTest: false, baseTime: 2.5, baseFps: 0 },
+  { id: "word", name: "Word", category: "productivity", icon: "FileText", description: "Microsoft Word document editing", isFpsTest: false, baseTime: 1.5, baseFps: 0 },
+  { id: "capcut", name: "CapCut", category: "creative", icon: "Video", description: "CapCut video editing", isFpsTest: false, baseTime: 2.8, baseFps: 0 },
+  { id: "photopea", name: "Photopea", category: "creative", icon: "Image", description: "Photopea online photo editor", isFpsTest: false, baseTime: 3.0, baseFps: 0 },
+  { id: "pixlr", name: "Pixlr", category: "creative", icon: "Image", description: "Pixlr photo editor", isFpsTest: false, baseTime: 2.2, baseFps: 0 },
 ];
 
 // ---------------------------------------------------------------------------

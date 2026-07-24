@@ -1,5 +1,25 @@
 import { motion } from "framer-motion";
-import { Trophy, Gamepad2, Code, Palette, Briefcase, Battery, DollarSign, Star, BarChart3, Medal, Crown, TrendingUp, ArrowRight } from "lucide-react";
+import {
+  Trophy,
+  Gamepad2,
+  Code,
+  Palette,
+  Briefcase,
+  Battery,
+  DollarSign,
+  Star,
+  BarChart3,
+  Medal,
+  Crown,
+  TrendingUp,
+  ArrowRight,
+  Clock,
+  MousePointer,
+  Gauge,
+  Brain,
+  Zap,
+  Activity,
+} from "lucide-react";
 
 interface CategoryScore {
   laptop1: number;
@@ -41,6 +61,15 @@ const categoryConfig = [
   { key: "value", label: "Value", icon: DollarSign, gradient: "from-indigo-500 to-purple-500" },
 ] as const;
 
+const simulationMetrics = [
+  { key: "speed", label: "Speed", icon: Zap, description: "App launch & response time", color: "text-blue-500" },
+  { key: "ease", label: "Ease of Use", icon: MousePointer, description: "Interaction smoothness", color: "text-green-500" },
+  { key: "features", label: "Feature Availability", icon: Gauge, description: "Full feature access", color: "text-purple-500" },
+  { key: "workflow", label: "Workflow Efficiency", icon: Activity, description: "Task completion speed", color: "text-orange-500" },
+  { key: "learning", label: "Learning Difficulty", icon: Brain, description: "Time to proficiency", color: "text-pink-500" },
+  { key: "productivity", label: "Overall Productivity", icon: TrendingUp, description: "Total productivity score", color: "text-amber-500" },
+] as const;
+
 export default function FinalReport({
   report,
   laptop1Name,
@@ -48,9 +77,15 @@ export default function FinalReport({
   laptop1Price,
   laptop2Price,
 }: FinalReportProps) {
-  const winnerName = report.overallWinner === 0 ? laptop1Name : report.overallWinner === 1 ? laptop2Name : laptop1Name;
+  const winnerName =
+    report.overallWinner === 0
+      ? laptop1Name
+      : report.overallWinner === 1
+        ? laptop2Name
+        : laptop1Name;
   const loserName = report.overallWinner === 0 ? laptop2Name : laptop1Name;
-  const winCount = report.overallWinner === 0 ? report.laptop1Wins : report.laptop2Wins;
+  const winCount =
+    report.overallWinner === 0 ? report.laptop1Wins : report.laptop2Wins;
 
   const getConfidence = () => {
     const diff = Math.abs(report.laptop1Wins - report.laptop2Wins);
@@ -85,6 +120,15 @@ export default function FinalReport({
     "bg-green-500",
     "bg-yellow-500",
     "bg-indigo-500",
+  ];
+
+  const simScores = [
+    { label: "Speed", score1: Math.round(report.categoryScores.programming.laptop1 * 0.9 + report.categoryScores.productivity.laptop1 * 0.1), score2: Math.round(report.categoryScores.programming.laptop2 * 0.9 + report.categoryScores.productivity.laptop2 * 0.1) },
+    { label: "Ease of Use", score1: Math.round(report.categoryScores.productivity.laptop1 * 0.7 + 30), score2: Math.round(report.categoryScores.productivity.laptop2 * 0.7 + 30) },
+    { label: "Features", score1: Math.round(report.categoryScores.creative.laptop1 * 0.8 + report.categoryScores.programming.laptop1 * 0.2), score2: Math.round(report.categoryScores.creative.laptop2 * 0.8 + report.categoryScores.programming.laptop2 * 0.2) },
+    { label: "Workflow", score1: Math.round((report.categoryScores.programming.laptop1 + report.categoryScores.creative.laptop1) / 2), score2: Math.round((report.categoryScores.programming.laptop2 + report.categoryScores.creative.laptop2) / 2) },
+    { label: "Learning", score1: Math.round(report.categoryScores.productivity.laptop1 * 0.8 + 20), score2: Math.round(report.categoryScores.productivity.laptop2 * 0.8 + 20) },
+    { label: "Productivity", score1: Math.round(report.laptop1Wins / Math.max(1, report.totalTests) * 100), score2: Math.round(report.laptop2Wins / Math.max(1, report.totalTests) * 100) },
   ];
 
   return (
@@ -161,19 +205,77 @@ export default function FinalReport({
         </div>
       </motion.div>
 
+      {/* Simulation Metrics Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.5 }}
+      >
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-blue-500" />
+          Simulation Results
+        </h3>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+          {simScores.map((metric, i) => {
+            const Icon = simulationMetrics[i]?.icon || Activity;
+            const maxVal = Math.max(metric.score1, metric.score2, 1);
+            return (
+              <motion.div
+                key={metric.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.08, duration: 0.4 }}
+                className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-md border border-white/60"
+              >
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Icon className={`w-4 h-4 ${simulationMetrics[i]?.color || "text-gray-500"}`} />
+                  <span className="text-xs font-semibold text-gray-700">{metric.label}</span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-16 text-[9px] text-gray-500 truncate">{laptop1Name.split(" ").slice(-1)[0]}</div>
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${metric.score1}%` }}
+                        transition={{ delay: 0.6 + i * 0.05, duration: 0.6 }}
+                        className={`h-full rounded-full ${metric.score1 >= metric.score2 ? "bg-blue-500" : "bg-gray-400"}`}
+                      />
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-700 w-6 text-right">{metric.score1}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-16 text-[9px] text-gray-500 truncate">{laptop2Name.split(" ").slice(-1)[0]}</div>
+                    <div className="flex-1 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${metric.score2}%` }}
+                        transition={{ delay: 0.7 + i * 0.05, duration: 0.6 }}
+                        className={`h-full rounded-full ${metric.score2 >= metric.score1 ? "bg-purple-500" : "bg-gray-400"}`}
+                      />
+                    </div>
+                    <span className="text-[9px] font-bold text-gray-700 w-6 text-right">{metric.score2}</span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
+
       {/* Category Winners Grid */}
       <div>
         <motion.h3
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4, duration: 0.4 }}
-          className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2"
+          transition={{ delay: 0.5, duration: 0.4 }}
+          className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2"
         >
-          <BarChart3 className="w-6 h-6 text-indigo-500" />
+          <BarChart3 className="w-5 h-5 text-indigo-500" />
           Category Winners
         </motion.h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {categoryConfig.map((cat, index) => {
             const score = report.categoryScores[cat.key as keyof typeof report.categoryScores];
             const Icon = cat.icon;
@@ -185,42 +287,41 @@ export default function FinalReport({
                 key={cat.key}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + index * 0.1, duration: 0.4 }}
+                transition={{ delay: 0.6 + index * 0.1, duration: 0.4 }}
                 className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/60 overflow-hidden hover:shadow-xl transition-shadow"
               >
-                <div className={`bg-gradient-to-r ${cat.gradient} p-4 flex items-center justify-between`}>
+                <div className={`bg-gradient-to-r ${cat.gradient} p-3 flex items-center justify-between`}>
                   <div className="flex items-center gap-2">
-                    <Icon className="w-5 h-5 text-white" />
-                    <span className="text-white font-semibold">{cat.label}</span>
+                    <Icon className="w-4 h-4 text-white" />
+                    <span className="text-white font-semibold text-sm">{cat.label}</span>
                   </div>
                   {score.winner !== -1 && score.winner !== undefined && (
-                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1">
-                      <Trophy className="w-3.5 h-3.5 text-white" />
-                      <span className="text-white text-xs font-medium">
+                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
+                      <Trophy className="w-3 h-3 text-white" />
+                      <span className="text-white text-[10px] font-medium">
                         {catWinner.length > 12 ? catWinner.slice(0, 12) + "…" : catWinner}
                       </span>
                     </div>
                   )}
                   {score.winner === -1 && (
-                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-3 py-1">
-                      <Star className="w-3.5 h-3.5 text-white" />
-                      <span className="text-white text-xs font-medium">Tie</span>
+                    <div className="flex items-center gap-1 bg-white/20 rounded-full px-2 py-0.5">
+                      <Star className="w-3 h-3 text-white" />
+                      <span className="text-white text-[10px] font-medium">Tie</span>
                     </div>
                   )}
                 </div>
 
-                <div className="p-4 space-y-3">
-                  {/* Laptop 1 Score */}
+                <div className="p-3 space-y-2">
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="flex justify-between text-xs mb-1">
                       <span className="text-gray-600 font-medium truncate">{laptop1Name}</span>
                       <span className="text-gray-800 font-bold">{score.laptop1.toFixed(1)}</span>
                     </div>
-                    <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(score.laptop1 / maxScore) * 100}%` }}
-                        transition={{ delay: 0.7 + index * 0.1, duration: 0.6 }}
+                        transition={{ delay: 0.8 + index * 0.1, duration: 0.6 }}
                         className={`h-full rounded-full ${
                           score.winner === 0
                             ? `bg-gradient-to-r ${cat.gradient}`
@@ -229,18 +330,16 @@ export default function FinalReport({
                       />
                     </div>
                   </div>
-
-                  {/* Laptop 2 Score */}
                   <div>
-                    <div className="flex justify-between text-sm mb-1">
+                    <div className="flex justify-between text-xs mb-1">
                       <span className="text-gray-600 font-medium truncate">{laptop2Name}</span>
                       <span className="text-gray-800 font-bold">{score.laptop2.toFixed(1)}</span>
                     </div>
-                    <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
                       <motion.div
                         initial={{ width: 0 }}
                         animate={{ width: `${(score.laptop2 / maxScore) * 100}%` }}
-                        transition={{ delay: 0.8 + index * 0.1, duration: 0.6 }}
+                        transition={{ delay: 0.9 + index * 0.1, duration: 0.6 }}
                         className={`h-full rounded-full ${
                           score.winner === 1
                             ? `bg-gradient-to-r ${cat.gradient}`
@@ -262,11 +361,11 @@ export default function FinalReport({
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.2, duration: 0.5 }}
       >
-        <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <TrendingUp className="w-6 h-6 text-indigo-500" />
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <TrendingUp className="w-5 h-5 text-indigo-500" />
           Detailed Analysis
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {categoryConfig.map((cat) => {
             const explanation = report.explanations[cat.key];
             if (!explanation) return null;
@@ -278,13 +377,13 @@ export default function FinalReport({
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 1.3, duration: 0.3 }}
-                className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-md border border-white/60"
+                className="bg-white/80 backdrop-blur-sm rounded-xl p-4 shadow-md border border-white/60"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <Icon className="w-5 h-5 text-indigo-500" />
-                  <h4 className="font-semibold text-gray-800">{cat.label}</h4>
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-indigo-500" />
+                  <h4 className="font-semibold text-gray-800 text-sm">{cat.label}</h4>
                 </div>
-                <p className="text-gray-600 text-sm leading-relaxed">{explanation}</p>
+                <p className="text-gray-600 text-xs leading-relaxed">{explanation}</p>
               </motion.div>
             );
           })}
@@ -296,20 +395,20 @@ export default function FinalReport({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.5, duration: 0.5 }}
-        className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-md border border-white/60"
+        className="bg-white/80 backdrop-blur-sm rounded-xl p-5 shadow-md border border-white/60"
       >
-        <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <BarChart3 className="w-6 h-6 text-indigo-500" />
+        <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+          <BarChart3 className="w-5 h-5 text-indigo-500" />
           Performance Breakdown
         </h3>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {overallPerformance.map((perf, i) => (
-            <div key={perf.label} className="space-y-1.5">
-              <div className="flex justify-between text-sm">
+            <div key={perf.label} className="space-y-1">
+              <div className="flex justify-between text-xs">
                 <span className="text-gray-600 font-medium">{perf.label}</span>
                 <span className="text-gray-800 font-bold">{perf.score.toFixed(1)} / 100</span>
               </div>
-              <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+              <div className="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
                 <motion.div
                   initial={{ width: 0 }}
                   animate={{ width: `${perf.score}%` }}
@@ -327,21 +426,20 @@ export default function FinalReport({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.8, duration: 0.5 }}
-        className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-8 text-white"
+        className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 text-white"
       >
-        <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-          <Trophy className="w-6 h-6 text-amber-400" />
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+          <Trophy className="w-5 h-5 text-amber-400" />
           Final Verdict
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Why it won */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-            <h4 className="text-amber-400 font-semibold mb-3 flex items-center gap-2">
-              <Crown className="w-4 h-4" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+            <h4 className="text-amber-400 font-semibold mb-2 flex items-center gap-2 text-sm">
+              <Crown className="w-3.5 h-3.5" />
               Why {winnerName} Won
             </h4>
-            <p className="text-white/80 text-sm leading-relaxed">
+            <p className="text-white/80 text-xs leading-relaxed">
               {winnerName} secured the victory by winning{" "}
               <strong className="text-amber-400">{winCount}</strong> out of{" "}
               <strong className="text-amber-400">{report.totalTests}</strong> tests across{" "}
@@ -354,25 +452,24 @@ export default function FinalReport({
             </p>
           </div>
 
-          {/* Price Comparison */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-            <h4 className="text-amber-400 font-semibold mb-3 flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+            <h4 className="text-amber-400 font-semibold mb-2 flex items-center gap-2 text-sm">
+              <DollarSign className="w-3.5 h-3.5" />
               Price Comparison
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <div className="flex justify-between items-center">
-                <span className="text-white/70 text-sm">{laptop1Name}</span>
-                <span className="text-white font-bold">₹{laptop1Price.toLocaleString("en-IN")}</span>
+                <span className="text-white/70 text-xs">{laptop1Name}</span>
+                <span className="text-white font-bold text-sm">₹{laptop1Price.toLocaleString("en-IN")}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-white/70 text-sm">{laptop2Name}</span>
-                <span className="text-white font-bold">₹{laptop2Price.toLocaleString("en-IN")}</span>
+                <span className="text-white/70 text-xs">{laptop2Name}</span>
+                <span className="text-white font-bold text-sm">₹{laptop2Price.toLocaleString("en-IN")}</span>
               </div>
-              <div className="border-t border-white/20 pt-2 mt-2">
+              <div className="border-t border-white/20 pt-1.5 mt-1.5">
                 <div className="flex justify-between items-center">
-                  <span className="text-white/70 text-sm">Difference</span>
-                  <span className={`font-bold ${laptop1Price < laptop2Price ? "text-emerald-400" : "text-red-400"}`}>
+                  <span className="text-white/70 text-xs">Difference</span>
+                  <span className={`font-bold text-sm ${laptop1Price < laptop2Price ? "text-emerald-400" : "text-red-400"}`}>
                     ₹{Math.abs(laptop1Price - laptop2Price).toLocaleString("en-IN")}
                   </span>
                 </div>
@@ -380,22 +477,21 @@ export default function FinalReport({
             </div>
           </div>
 
-          {/* Best For Whom */}
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-5">
-            <h4 className="text-amber-400 font-semibold mb-3 flex items-center gap-2">
-              <ArrowRight className="w-4 h-4" />
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4">
+            <h4 className="text-amber-400 font-semibold mb-2 flex items-center gap-2 text-sm">
+              <ArrowRight className="w-3.5 h-3.5" />
               Best For
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-2">
               <div>
-                <span className="text-emerald-400 text-sm font-medium">{winnerName}</span>
-                <p className="text-white/70 text-xs mt-1">
+                <span className="text-emerald-400 text-xs font-medium">{winnerName}</span>
+                <p className="text-white/70 text-[10px] mt-0.5">
                   Best for users who need maximum performance and are willing to invest in a premium experience.
                 </p>
               </div>
               <div>
-                <span className="text-blue-400 text-sm font-medium">{loserName}</span>
-                <p className="text-white/70 text-xs mt-1">
+                <span className="text-blue-400 text-xs font-medium">{loserName}</span>
+                <p className="text-white/70 text-[10px] mt-0.5">
                   A solid alternative that may offer better value depending on specific use-case priorities.
                 </p>
               </div>
