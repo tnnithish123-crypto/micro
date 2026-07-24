@@ -34,9 +34,9 @@ const WIFI_ICON = "https://fonts.gstatic.com/s/i/materialicons/wifi/v15/24px.svg
 const BATTERY_ICON = "https://fonts.gstatic.com/s/i/materialicons/battery_full/v14/24px.svg";
 
 const APPS: AppDefinition[] = [
-  { id: "photoshop", simulatorId: "photoshop", name: "Photoshop", category: "creative", color: "#001e36", icon: "Ps", logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Adobe_Photoshop_CC_icon.svg" },
-  { id: "premiere", simulatorId: "premiere", name: "Premiere Pro", category: "creative", color: "#1a0a2e", icon: "Pr", logo: "https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg" },
-  { id: "vscode", simulatorId: "vscode", name: "VS Code", category: "dev", color: "#1e1e2e", icon: "VS", logo: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" },
+  { id: "photoshop", simulatorId: "photoshop", name: "Photoshop", category: "creative", color: "#001e36", icon: "Ps", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/af/Adobe_Photoshop_CC_icon.svg/120px-Adobe_Photoshop_CC_icon.svg.png" },
+  { id: "premiere", simulatorId: "premiere", name: "Premiere Pro", category: "creative", color: "#1a0a2e", icon: "Pr", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/40/Adobe_Premiere_Pro_CC_icon.svg/120px-Adobe_Premiere_Pro_CC_icon.svg.png" },
+  { id: "vscode", simulatorId: "vscode", name: "VS Code", category: "dev", color: "#1e1e2e", icon: "VS", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9a/Visual_Studio_Code_1.35_icon.svg/120px-Visual_Studio_Code_1.35_icon.svg.png" },
   { id: "blender", simulatorId: "blender", name: "Blender", category: "creative", color: "#265c9c", icon: "Bl", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Blender_logo_no_text.svg" },
   { id: "canva", simulatorId: "canva", name: "Canva", category: "productivity", color: "#00c4cc", icon: "Ca", logo: "https://upload.wikimedia.org/wikipedia/commons/b/b8/Canva_logo.svg" },
   { id: "figma", simulatorId: "figma", name: "Figma", category: "dev", color: "#1e1e1e", icon: "Fi", logo: "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg" },
@@ -44,6 +44,8 @@ const APPS: AppDefinition[] = [
   { id: "capcut", simulatorId: "capcut", name: "CapCut", category: "creative", color: "#1a1a1a", icon: "CC", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d8/CapCut_logo.svg/330px-CapCut_logo.svg.png" },
   { id: "photopea", simulatorId: "photopea", name: "Photopea", category: "creative", color: "#18a4f4", icon: "PP", logo: "https://www.photopea.com/promo/icon512.png" },
   { id: "pixlr", simulatorId: "pixlr", name: "Pixlr", category: "creative", color: "#00c853", icon: "Px", logo: "https://pixlr.com/favicon.ico" },
+  { id: "gta", simulatorId: "gta", name: "GTA V", category: "gaming", color: "#1a1a2e", icon: "GT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Grand_Theft_Auto_logo_series.svg/330px-Grand_Theft_Auto_logo_series.svg.png" },
+  { id: "tekken", simulatorId: "tekken", name: "Tekken 8", category: "gaming", color: "#2d1b69", icon: "TK", logo: "https://upload.wikimedia.org/wikipedia/commons/0/06/Tekken.png" },
 ];
 
 type Phase = "selecting" | "splash" | "running" | "winner" | "complete";

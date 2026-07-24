@@ -359,6 +359,8 @@ export const TEST_DEFINITIONS: TestDefinition[] = [
   { id: "capcut", name: "CapCut", category: "creative", icon: "Video", description: "CapCut video editing", isFpsTest: false, baseTime: 2.8, baseFps: 0 },
   { id: "photopea", name: "Photopea", category: "creative", icon: "Image", description: "Photopea online photo editor", isFpsTest: false, baseTime: 3.0, baseFps: 0 },
   { id: "pixlr", name: "Pixlr", category: "creative", icon: "Image", description: "Pixlr photo editor", isFpsTest: false, baseTime: 2.2, baseFps: 0 },
+  { id: "gta", name: "GTA V", category: "gaming", icon: "Gamepad2", description: "Grand Theft Auto V gaming performance", isFpsTest: true, baseTime: 0, baseFps: 75 },
+  { id: "tekken", name: "Tekken 8", category: "gaming", icon: "Swords", description: "Tekken 8 fighting game performance", isFpsTest: true, baseTime: 0, baseFps: 58 },
 ];
 
 // ---------------------------------------------------------------------------

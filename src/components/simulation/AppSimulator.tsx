@@ -1078,6 +1078,197 @@ export default function AppSimulator({
     </div>
   );
 
+  if (appId === "gta") return (
+    <div className="flex flex-col h-full bg-[#0a0a0a] text-white">
+      <div className="flex items-center h-9 bg-[#111] border-b border-[#222] px-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-[#f5a623] flex items-center justify-center text-[8px] font-black text-black">GT</div>
+          <span className="text-[11px] font-bold text-white tracking-wider">GRAND THEFT AUTO V</span>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+          <span>GPU: {tier === "high" ? "RTX 5070" : tier === "medium" ? "RTX 4060" : "GTX 1650"}</span>
+          <span>VRAM: {tier === "high" ? "12GB" : tier === "medium" ? "8GB" : "4GB"}</span>
+        </div>
+      </div>
+      <div className="flex-1 relative overflow-hidden" onClick={() => onInteract("click")}>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0a2e] via-[#0f1b2d] to-[#0a0a0a]" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <div className="relative w-full h-full">
+            {/* Sky */}
+            <div className="absolute inset-0 bg-gradient-to-b from-[#1e3a5f] via-[#2d5a87] to-[#4a90c4]" style={{ height: '45%' }} />
+            {/* City skyline */}
+            <div className="absolute bottom-[55%] left-0 right-0 flex items-end justify-center gap-1 px-4">
+              {[60, 90, 75, 110, 85, 95, 70, 100, 80, 65, 105, 88, 72, 98].map((h, i) => (
+                <div key={i} className="bg-[#1a2a3a] border border-[#2a3a4a] rounded-t-sm" style={{ width: '5%', height: `${h}px` }}>
+                  <div className="flex flex-wrap gap-px p-0.5">
+                    {Array.from({ length: Math.floor(h / 15) }).map((_, j) => (
+                      <div key={j} className="w-1 h-1 bg-yellow-400/60 rounded-sm" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            {/* Road */}
+            <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-[#2a2a2a]">
+              <div className="absolute top-0 left-0 right-0 h-px bg-[#444]" />
+              <div className="absolute top-[40%] left-0 right-0 flex justify-center gap-8">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <div key={i} className="w-12 h-1 bg-yellow-400/70 rounded" />
+                ))}
+              </div>
+            </div>
+            {/* HUD */}
+            <div className="absolute top-4 right-4 flex flex-col items-end gap-2">
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <div className="text-[10px] text-green-400 font-bold">WANTED</div>
+                <div className="flex gap-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <div key={star} className={`w-3 h-3 ${star <= 2 ? 'text-yellow-400' : 'text-gray-600'}`}>★</div>
+                  ))}
+                </div>
+              </div>
+              <div className="bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+                <div className="text-[9px] text-gray-400">HEALTH</div>
+                <div className="w-24 h-1.5 bg-gray-700 rounded-full mt-1">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: '75%' }} />
+                </div>
+                <div className="text-[9px] text-gray-400 mt-1">ARMOR</div>
+                <div className="w-24 h-1.5 bg-gray-700 rounded-full mt-1">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: '50%' }} />
+                </div>
+              </div>
+            </div>
+            {/* Minimap */}
+            <div className="absolute bottom-4 left-4 w-32 h-32 bg-[#1a2a1a] rounded-lg border-2 border-[#333] overflow-hidden">
+              <div className="absolute inset-0 opacity-60">
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-yellow-600/50" />
+                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-yellow-600/50" />
+                <div className="absolute top-[30%] left-[20%] w-2 h-2 bg-white rounded-full" />
+                <div className="absolute top-[60%] left-[70%] w-1.5 h-1.5 bg-red-500 rounded-full" />
+              </div>
+              <div className="absolute bottom-1 left-1 text-[7px] text-white/70">MAP</div>
+            </div>
+            {/* Player info */}
+            <div className="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm rounded-lg px-3 py-2 border border-white/10">
+              <div className="text-[9px] text-gray-400">MONEY</div>
+              <div className="text-[11px] text-green-400 font-bold">$2,847,350</div>
+            </div>
+          </div>
+        </div>
+        {/* FPS counter */}
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded px-2 py-1 border border-white/10">
+          <span className="text-[9px] font-mono text-green-400">FPS: {tier === "high" ? "85-120" : tier === "medium" ? "50-75" : "25-40"}</span>
+        </div>
+      </div>
+      <div className="h-6 bg-[#111] border-t border-[#222] flex items-center px-3 text-[9px] text-gray-500 shrink-0">
+        <span>GTA Online | LS | {tier === "high" ? "Ultra" : tier === "medium" ? "High" : "Normal"} Settings</span>
+        <div className="flex-1" />
+        <span className="text-green-400">● Connected</span>
+      </div>
+    </div>
+  );
+
+  if (appId === "tekken") return (
+    <div className="flex flex-col h-full bg-[#0a0a0a] text-white">
+      <div className="flex items-center h-9 bg-[#111] border-b border-[#222] px-3 shrink-0">
+        <div className="flex items-center gap-2">
+          <div className="w-5 h-5 rounded bg-[#2d1b69] flex items-center justify-center text-[8px] font-black text-white">TK</div>
+          <span className="text-[11px] font-bold text-white tracking-wider">TEKKEN 8</span>
+        </div>
+        <div className="flex-1" />
+        <div className="flex items-center gap-3 text-[10px] text-gray-500">
+          <span>GPU: {tier === "high" ? "RTX 5070" : tier === "medium" ? "RTX 4060" : "GTX 1650"}</span>
+          <span>Resolution: {tier === "high" ? "4K" : tier === "medium" ? "1440p" : "1080p"}</span>
+        </div>
+      </div>
+      <div className="flex-1 relative overflow-hidden" onClick={() => onInteract("click")}>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#1a0a3a] via-[#0f0a2d] to-[#0a0a1a]" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {/* Fight arena */}
+          <div className="relative w-full h-full">
+            {/* Arena floor */}
+            <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-[#1a1a2e] to-[#2a2a3e]">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-900/20 via-transparent to-purple-900/20" />
+            </div>
+            {/* Health bars */}
+            <div className="absolute top-6 left-0 right-0 flex items-center justify-between px-8">
+              <div className="flex-1 max-w-[35%]">
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-8 h-8 rounded bg-[#2d1b69] flex items-center justify-center text-[8px] font-bold border border-purple-500/30">P1</div>
+                  <span className="text-[10px] font-bold text-white">JIN KAZAMA</span>
+                </div>
+                <div className="w-full h-3 bg-gray-800 rounded-sm overflow-hidden border border-gray-700">
+                  <div className="h-full bg-gradient-to-r from-green-500 to-green-400 rounded-sm transition-all" style={{ width: '65%' }} />
+                </div>
+                <div className="w-full h-1.5 bg-gray-800 rounded-sm mt-1 overflow-hidden border border-gray-700">
+                  <div className="h-full bg-blue-500 rounded-sm" style={{ width: '40%' }} />
+                </div>
+              </div>
+              <div className="text-center px-4">
+                <div className="text-2xl font-black text-yellow-400 drop-shadow-lg" style={{ textShadow: '0 0 20px rgba(250,204,21,0.5)' }}>ROUND 2</div>
+                <div className="text-[10px] text-gray-400 mt-1">K.O. {tier === "high" ? "60" : tier === "medium" ? "45" : "30"}s</div>
+              </div>
+              <div className="flex-1 max-w-[35%] text-right">
+                <div className="flex items-center gap-2 mb-1 justify-end">
+                  <span className="text-[10px] font-bold text-white">KAZUYA MISHIMA</span>
+                  <div className="w-8 h-8 rounded bg-[#6b0a0a] flex items-center justify-center text-[8px] font-bold border border-red-500/30">P2</div>
+                </div>
+                <div className="w-full h-3 bg-gray-800 rounded-sm overflow-hidden border border-gray-700">
+                  <div className="h-full bg-gradient-to-l from-green-500 to-green-400 rounded-sm transition-all ml-auto" style={{ width: '45%' }} />
+                </div>
+                <div className="w-full h-1.5 bg-gray-800 rounded-sm mt-1 overflow-hidden border border-gray-700">
+                  <div className="h-full bg-blue-500 rounded-sm ml-auto" style={{ width: '60%' }} />
+                </div>
+              </div>
+            </div>
+            {/* Characters */}
+            <div className="absolute bottom-[40%] left-[20%] flex flex-col items-center">
+              <div className="w-20 h-28 bg-gradient-to-t from-[#2d1b69] to-[#4a2dbd] rounded-t-lg border border-purple-400/30 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <span className="text-3xl relative z-10">🥊</span>
+              </div>
+              <div className="text-[9px] text-purple-400 font-bold mt-1">JIN</div>
+            </div>
+            <div className="absolute bottom-[40%] right-[20%] flex flex-col items-center">
+              <div className="w-20 h-28 bg-gradient-to-t from-[#6b0a0a] to-[#bd2d2d] rounded-t-lg border border-red-400/30 flex items-center justify-center relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <span className="text-3xl relative z-10">👊</span>
+              </div>
+              <div className="text-[9px] text-red-400 font-bold mt-1">KAZUYA</div>
+            </div>
+            {/* Combo counter */}
+            <div className="absolute top-[40%] left-[12%] bg-black/70 backdrop-blur-sm rounded-lg px-3 py-2 border border-purple-500/30">
+              <div className="text-[9px] text-gray-400">COMBO</div>
+              <div className="text-lg font-black text-yellow-400">7 HITS</div>
+              <div className="text-[10px] text-purple-400">248 DMG</div>
+            </div>
+            {/* Round indicators */}
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 flex gap-6">
+              <div className="flex gap-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-gray-700" />
+              </div>
+              <div className="flex gap-1">
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* FPS counter */}
+        <div className="absolute top-4 left-4 bg-black/60 backdrop-blur-sm rounded px-2 py-1 border border-white/10">
+          <span className="text-[9px] font-mono text-green-400">FPS: {tier === "high" ? "58-60" : tier === "medium" ? "45-55" : "25-35"}</span>
+        </div>
+      </div>
+      <div className="h-6 bg-[#111] border-t border-[#222] flex items-center px-3 text-[9px] text-gray-500 shrink-0">
+        <span>TEKKEN 8 | Arena | {tier === "high" ? "Ultra" : tier === "medium" ? "High" : "Medium"} Graphics</span>
+        <div className="flex-1" />
+        <span className="text-green-400">● Online</span>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex items-center justify-center h-full bg-[#1e1e1e] text-gray-400 text-sm">
       App not available
