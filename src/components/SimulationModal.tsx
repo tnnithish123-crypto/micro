@@ -625,6 +625,16 @@ function DesktopScreen({
   onAppClick: (appId: string) => void;
   laptopIndex: 0 | 1;
 }) {
+  const [failedImages, setFailedImages] = useState<Set<string>>(new Set());
+
+  const handleImageError = (appId: string) => {
+    setFailedImages((prev) => {
+      const next = new Set(prev);
+      next.add(appId);
+      return next;
+    });
+  };
+
   return (
     <div className="absolute inset-0 flex flex-col bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
       {/* Top bar */}
@@ -649,25 +659,35 @@ function DesktopScreen({
       {/* Desktop area with 3x3+1 app grid (scrollable) */}
       <div className="flex-1 overflow-y-auto p-3 sm:p-6 flex items-center justify-center">
         <div className="grid grid-cols-3 gap-3 sm:gap-5 justify-items-center">
-          {apps.map((app) => (
-            <button
-              key={app.id}
-              onClick={() => onAppClick(app.id)}
-              className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl hover:bg-white/8 active:bg-white/12 transition-all group cursor-pointer w-24 sm:w-32"
-            >
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-white shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all flex items-center justify-center">
-                <img
-                  src={app.logo}
-                  alt={app.name}
-                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
-                  loading="eager"
-                />
-              </div>
-              <span className="text-[10px] sm:text-[11px] text-white/70 font-medium text-center leading-tight group-hover:text-white transition-colors">
-                {app.name}
-              </span>
-            </button>
-          ))}
+          {apps.map((app) => {
+            const imgFailed = failedImages.has(app.id);
+            return (
+              <button
+                key={app.id}
+                onClick={() => onAppClick(app.id)}
+                className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl hover:bg-white/8 active:bg-white/12 transition-all group cursor-pointer w-24 sm:w-32"
+              >
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all flex items-center justify-center"
+                  style={{ backgroundColor: imgFailed ? app.color : '#ffffff' }}
+                >
+                  {imgFailed ? (
+                    <span className="text-sm font-bold text-white">{app.icon}</span>
+                  ) : (
+                    <img
+                      src={app.logo}
+                      alt={app.name}
+                      className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                      loading="eager"
+                      onError={() => handleImageError(app.id)}
+                    />
+                  )}
+                </div>
+                <span className="text-[10px] sm:text-[11px] text-white/70 font-medium text-center leading-tight group-hover:text-white transition-colors">
+                  {app.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
