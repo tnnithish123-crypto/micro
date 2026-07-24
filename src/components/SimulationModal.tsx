@@ -38,10 +38,10 @@ const APPS: AppDefinition[] = [
   { id: "premiere", simulatorId: "premiere", name: "Premiere Pro", category: "creative", color: "#1a0a2e", icon: "Pr", logo: "https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg" },
   { id: "vscode", simulatorId: "vscode", name: "VS Code", category: "dev", color: "#1e1e2e", icon: "VS", logo: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" },
   { id: "blender", simulatorId: "blender", name: "Blender", category: "creative", color: "#265c9c", icon: "Bl", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Blender_logo_no_text.svg" },
-  { id: "canva", simulatorId: "canva", name: "Canva", category: "productivity", color: "#00c4cc", icon: "Ca", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg" },
+  { id: "canva", simulatorId: "canva", name: "Canva", category: "productivity", color: "#00c4cc", icon: "Ca", logo: "https://cdn.simpleicons.org/canva" },
   { id: "figma", simulatorId: "figma", name: "Figma", category: "dev", color: "#1e1e1e", icon: "Fi", logo: "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg" },
-  { id: "word", simulatorId: "word", name: "Word", category: "productivity", color: "#2b5797", icon: "Wo", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Microsoft_Office_Word_%282019%E2%80%93present%29.svg" },
-  { id: "capcut", simulatorId: "capcut", name: "CapCut", category: "creative", color: "#1a1a1a", icon: "CC", logo: "https://upload.wikimedia.org/wikipedia/commons/6/64/CapCut_logo.svg" },
+  { id: "word", simulatorId: "word", name: "Word", category: "productivity", color: "#2b5797", icon: "Wo", logo: "https://cdn.simpleicons.org/microsoftword" },
+  { id: "capcut", simulatorId: "capcut", name: "CapCut", category: "creative", color: "#1a1a1a", icon: "CC", logo: "https://seeklogo.com/images/C/capcut-logo-947A7C40D9-seeklogo.com.png" },
   { id: "photopea", simulatorId: "photopea", name: "Photopea", category: "creative", color: "#18a4f4", icon: "PP", logo: "https://www.photopea.com/promo/icon512.png" },
   { id: "pixlr", simulatorId: "pixlr", name: "Pixlr", category: "creative", color: "#00c853", icon: "Px", logo: "https://pixlr.com/favicon.ico" },
 ];
@@ -644,9 +644,9 @@ function DesktopScreen({
         </div>
       </div>
 
-      {/* Desktop area with 3x3+1 app grid */}
-      <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
-        <div className="grid grid-cols-3 gap-3 sm:gap-5">
+      {/* Desktop area with 3x3+1 app grid (scrollable) */}
+      <div className="flex-1 overflow-y-auto p-3 sm:p-6">
+        <div className="grid grid-cols-3 gap-3 sm:gap-5 justify-items-center content-center min-h-full">
           {apps.map((app) => (
             <button
               key={app.id}
