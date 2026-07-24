@@ -26,22 +26,27 @@ export interface AppDefinition {
   category: "browser" | "dev" | "creative" | "gaming" | "productivity" | "ai" | "system";
   color: string;
   icon: string;
+  logo: string;
 }
 
+const HP_DESKTOP_LOGO = "https://upload.wikimedia.org/wikipedia/commons/a/ad/HP_logo_2012.svg";
+const WIFI_ICON = "https://fonts.gstatic.com/s/i/materialicons/wifi/v15/24px.svg";
+const BATTERY_ICON = "https://fonts.gstatic.com/s/i/materialicons/battery_full/v14/24px.svg";
+
 const APPS: AppDefinition[] = [
-  { id: "photoshop", simulatorId: "photoshop", name: "Photoshop", category: "creative", color: "#31a8ff", icon: "Ps" },
-  { id: "premiere", simulatorId: "premiere", name: "Premiere Pro", category: "creative", color: "#9999ff", icon: "Pr" },
-  { id: "vscode", simulatorId: "vscode", name: "VS Code", category: "dev", color: "#007acc", icon: "VS" },
-  { id: "blender", simulatorId: "blender", name: "Blender", category: "creative", color: "#ea7600", icon: "Bl" },
-  { id: "canva", simulatorId: "canva", name: "Canva", category: "productivity", color: "#7b2ff7", icon: "Ca" },
-  { id: "figma", simulatorId: "figma", name: "Figma", category: "dev", color: "#a259ff", icon: "Fi" },
-  { id: "word", simulatorId: "word", name: "Word", category: "productivity", color: "#2b5797", icon: "Wo" },
-  { id: "capcut", simulatorId: "capcut", name: "CapCut", category: "creative", color: "#00c4cc", icon: "CC" },
-  { id: "photopea", simulatorId: "photopea", name: "Photopea", category: "creative", color: "#18a4f4", icon: "PP" },
-  { id: "pixlr", simulatorId: "pixlr", name: "Pixlr", category: "creative", color: "#00c853", icon: "Px" },
+  { id: "photoshop", simulatorId: "photoshop", name: "Photoshop", category: "creative", color: "#001e36", icon: "Ps", logo: "https://upload.wikimedia.org/wikipedia/commons/a/af/Adobe_Photoshop_CC_icon.svg" },
+  { id: "premiere", simulatorId: "premiere", name: "Premiere Pro", category: "creative", color: "#1a0a2e", icon: "Pr", logo: "https://upload.wikimedia.org/wikipedia/commons/4/40/Adobe_Premiere_Pro_CC_icon.svg" },
+  { id: "vscode", simulatorId: "vscode", name: "VS Code", category: "dev", color: "#1e1e2e", icon: "VS", logo: "https://upload.wikimedia.org/wikipedia/commons/9/9a/Visual_Studio_Code_1.35_icon.svg" },
+  { id: "blender", simulatorId: "blender", name: "Blender", category: "creative", color: "#265c9c", icon: "Bl", logo: "https://upload.wikimedia.org/wikipedia/commons/0/0c/Blender_logo_no_text.svg" },
+  { id: "canva", simulatorId: "canva", name: "Canva", category: "productivity", color: "#00c4cc", icon: "Ca", logo: "https://upload.wikimedia.org/wikipedia/commons/0/08/Canva_icon_2021.svg" },
+  { id: "figma", simulatorId: "figma", name: "Figma", category: "dev", color: "#1e1e1e", icon: "Fi", logo: "https://upload.wikimedia.org/wikipedia/commons/3/33/Figma-logo.svg" },
+  { id: "word", simulatorId: "word", name: "Word", category: "productivity", color: "#2b5797", icon: "Wo", logo: "https://upload.wikimedia.org/wikipedia/commons/f/fb/Microsoft_Office_Word_%282019%E2%80%93present%29.svg" },
+  { id: "capcut", simulatorId: "capcut", name: "CapCut", category: "creative", color: "#1a1a1a", icon: "CC", logo: "https://upload.wikimedia.org/wikipedia/commons/6/64/CapCut_logo.svg" },
+  { id: "photopea", simulatorId: "photopea", name: "Photopea", category: "creative", color: "#18a4f4", icon: "PP", logo: "https://www.photopea.com/promo/icon512.png" },
+  { id: "pixlr", simulatorId: "pixlr", name: "Pixlr", category: "creative", color: "#00c853", icon: "Px", logo: "https://pixlr.com/favicon.ico" },
 ];
 
-type Phase = "selecting" | "running" | "complete";
+type Phase = "selecting" | "splash" | "running" | "complete";
 
 interface CompletedTest {
   appId: string;
@@ -57,6 +62,10 @@ function getPerformanceTier(product: Product): PerformanceTier {
   if (score >= 20) return "high";
   if (score >= 14) return "medium";
   return "low";
+}
+
+function getSplashDuration(tier: PerformanceTier): number {
+  return tier === "high" ? 1200 : tier === "medium" ? 2200 : 3500;
 }
 
 export default function SimulationModal({
@@ -80,33 +89,33 @@ export default function SimulationModal({
   const tier2 = getPerformanceTier(laptop2);
 
   const isTestRunning = phase === "running" && activeApp !== null;
+  const isSplash = phase === "splash" && activeApp !== null;
 
   const handleAppClick = useCallback(
     (appId: string) => {
-      if (phase === "running") return;
+      if (phase === "running" || phase === "splash") return;
       setActiveApp(appId);
-      setPhase("running");
-      setElapsedTime(0);
-      startTimeRef.current = Date.now();
+      setPhase("splash");
 
-      if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setElapsedTime(
-          Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10
-        );
-      }, 100);
+      const splashTime = Math.max(getSplashDuration(tier1), getSplashDuration(tier2));
+      setTimeout(() => {
+        setPhase("running");
+        setElapsedTime(0);
+        startTimeRef.current = Date.now();
+        if (timerRef.current) clearInterval(timerRef.current);
+        timerRef.current = setInterval(() => {
+          setElapsedTime(
+            Math.round(((Date.now() - startTimeRef.current) / 1000) * 10) / 10
+          );
+        }, 100);
+      }, splashTime);
     },
-    [phase]
+    [phase, tier1, tier2]
   );
 
   const handleCompleteTest = useCallback(() => {
     if (!activeApp) return;
     if (timerRef.current) clearInterval(timerRef.current);
-
-    const time1 = elapsedTime;
-    const time2 = elapsedTime;
-    const winner: 0 | 1 | -1 =
-      tier1 === tier2 ? -1 : tier1 === "high" ? 0 : tier1 === "low" ? 1 : -1;
 
     setCompletedTests((prev) => [
       ...prev,
@@ -134,7 +143,7 @@ export default function SimulationModal({
       metricsRef1.current = null;
       metricsRef2.current = null;
     }, 600);
-  }, [activeApp, elapsedTime, laptop1, laptop2, tier1, tier2]);
+  }, [activeApp, laptop1, laptop2]);
 
   useEffect(() => {
     return () => {
@@ -182,17 +191,20 @@ export default function SimulationModal({
                 <h2 className="text-sm font-bold text-white">
                   {isTestRunning
                     ? `Testing: ${activeAppDef?.name}`
-                    : "Performance Simulation"}
+                    : isSplash
+                      ? `Opening: ${activeAppDef?.name}...`
+                      : "Performance Simulation"}
                 </h2>
                 <p className="text-[10px] text-gray-400">
                   {isTestRunning
                     ? "Interact with both apps, then click Complete"
-                    : "Select an app to open on both laptops"}
+                    : isSplash
+                      ? "Launching application on both laptops"
+                      : "Select an app to open on both laptops"}
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
-              {/* Timer */}
               {isTestRunning && (
                 <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-800 border border-gray-700">
                   <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
@@ -202,7 +214,6 @@ export default function SimulationModal({
                 </div>
               )}
 
-              {/* Score */}
               <div className="hidden sm:flex items-center gap-2 text-sm">
                 <span className="text-blue-400 font-bold text-xs">
                   {laptop1.name.split(" ").slice(-1)[0]}
@@ -247,7 +258,6 @@ export default function SimulationModal({
           <div className="flex-1 overflow-hidden flex flex-col">
             {/* Two laptop screens */}
             <div className="flex-1 flex items-stretch gap-2 p-2 sm:p-3 min-h-0">
-              {/* Laptop 1 */}
               <LaptopFrame
                 name={laptop1.name}
                 tier={tier1}
@@ -261,16 +271,12 @@ export default function SimulationModal({
                 laptopIndex={0}
               />
 
-              {/* VS divider */}
               <div className="hidden sm:flex flex-col items-center justify-center gap-1 text-gray-600 shrink-0 w-6">
                 <div className="w-px flex-1 bg-gray-800" />
-                <span className="text-[10px] font-black uppercase tracking-widest">
-                  VS
-                </span>
+                <span className="text-[10px] font-black uppercase tracking-widest">VS</span>
                 <div className="w-px flex-1 bg-gray-800" />
               </div>
 
-              {/* Laptop 2 */}
               <LaptopFrame
                 name={laptop2.name}
                 tier={tier2}
@@ -285,18 +291,14 @@ export default function SimulationModal({
               />
             </div>
 
-            {/* App icons dock */}
+            {/* Bottom dock */}
             <div className="shrink-0 bg-gray-900 border-t border-gray-800 px-3 sm:px-5 py-2.5">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">
                   {isTestRunning ? "Apps Tested" : "Available Apps"}
                 </span>
                 {isTestRunning && (
-                  <motion.span
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-[9px] text-green-400 font-bold"
-                  >
+                  <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-[9px] text-green-400 font-bold">
                     ● LIVE
                   </motion.span>
                 )}
@@ -317,11 +319,8 @@ export default function SimulationModal({
                         ${!activeApp ? "hover:bg-gray-800 cursor-pointer" : "cursor-not-allowed"}
                       `}
                     >
-                      <div
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-white text-[10px] font-bold shadow-md"
-                        style={{ backgroundColor: app.color + "20", color: app.color, border: `1px solid ${app.color}40` }}
-                      >
-                        {app.icon}
+                      <div className="w-9 h-9 rounded-lg overflow-hidden bg-white/5 flex items-center justify-center shadow-md">
+                        <img src={app.logo} alt={app.name} className="w-6 h-6 object-contain" loading="eager" />
                       </div>
                       <span className="text-[9px] text-gray-400 font-medium text-center leading-tight w-12 truncate">
                         {app.name}
@@ -349,11 +348,9 @@ export default function SimulationModal({
                 {completedTests.map((t, i) => {
                   const app = APPS.find((a) => a.id === t.appId);
                   return (
-                    <div
-                      key={i}
-                      className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-800/50 text-[9px]"
-                    >
-                      <span className="text-gray-400">{app?.icon}</span>
+                    <div key={i} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-800/50 text-[9px]">
+                      <img src={app?.logo} alt="" className="w-3 h-3 object-contain" />
+                      <span className="text-gray-400">{app?.name}</span>
                       <span className={t.winner === 0 ? "text-blue-400 font-bold" : "text-gray-500"}>
                         {t.time1.toFixed(1)}s
                       </span>
@@ -387,6 +384,10 @@ export default function SimulationModal({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* LaptopFrame                                                        */
+/* ------------------------------------------------------------------ */
+
 function LaptopFrame({
   name,
   tier,
@@ -410,6 +411,9 @@ function LaptopFrame({
   onMetricsUpdate: (m: MetricsData) => void;
   laptopIndex: 0 | 1;
 }) {
+  const activeAppDef = activeApp ? apps.find((a) => a.id === activeApp) : null;
+  const splashDuration = tier === "high" ? 1200 : tier === "medium" ? 2200 : 3500;
+
   return (
     <div className="flex-1 flex flex-col min-w-0 min-h-0">
       {/* Laptop name bar */}
@@ -418,10 +422,7 @@ function LaptopFrame({
         style={{ backgroundColor: accentColor + "15", borderBottom: `2px solid ${accentColor}40` }}
       >
         <div className="flex items-center gap-2">
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: accentColor }}
-          />
+          <img src={HP_DESKTOP_LOGO} alt="HP" className="w-4 h-4 object-contain brightness-200" />
           <span className="text-xs font-bold text-white truncate">{name}</span>
         </div>
         <div className="flex items-center gap-2">
@@ -445,20 +446,24 @@ function LaptopFrame({
         className="flex-1 relative rounded-b-xl overflow-hidden border-2 min-h-0"
         style={{ borderColor: accentColor + "30" }}
       >
+        {/* Desktop */}
         {phase === "selecting" && !activeApp && (
-          <DesktopScreen
-            apps={apps}
-            onAppClick={onAppClick}
-            accentColor={accentColor}
-            laptopIndex={laptopIndex}
-          />
+          <DesktopScreen apps={apps} onAppClick={onAppClick} laptopIndex={laptopIndex} />
         )}
 
-        {activeApp && (
+        {/* Splash Screen */}
+        <AnimatePresence>
+          {phase === "splash" && activeAppDef && (
+            <SplashScreen app={activeAppDef} duration={splashDuration} />
+          )}
+        </AnimatePresence>
+
+        {/* Running App */}
+        {phase === "running" && activeApp && (
           <div className="absolute inset-0">
             <AppSimulator
               appId={activeApp}
-              onInteract={(type) => onMetricsUpdate({} as MetricsData)}
+              onInteract={() => onMetricsUpdate({} as MetricsData)}
               tier={tier}
               laptopIndex={laptopIndex}
             />
@@ -476,53 +481,118 @@ function LaptopFrame({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/* Splash Screen – logo pop animation                                 */
+/* ------------------------------------------------------------------ */
+
+function SplashScreen({ app, duration }: { app: AppDefinition; duration: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, scale: 1.1, transition: { duration: 0.3 } }}
+      className="absolute inset-0 z-30 flex flex-col items-center justify-center"
+      style={{ backgroundColor: app.color }}
+    >
+      {/* Radial glow */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <div
+          className="w-64 h-64 rounded-full opacity-30 blur-3xl"
+          style={{ background: `radial-gradient(circle, ${app.color}88 0%, transparent 70%)` }}
+        />
+      </div>
+
+      {/* Logo pop */}
+      <motion.div
+        initial={{ scale: 0.3, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.1, duration: 0.5, type: "spring", stiffness: 200, damping: 15 }}
+        className="relative z-10"
+      >
+        <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-2xl overflow-hidden shadow-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center p-4">
+          <img src={app.logo} alt={app.name} className="w-full h-full object-contain drop-shadow-2xl" />
+        </div>
+      </motion.div>
+
+      {/* App name */}
+      <motion.div
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ delay: 0.4, duration: 0.4 }}
+        className="relative z-10 mt-5 text-center"
+      >
+        <div className="text-white text-lg sm:text-xl font-bold drop-shadow-lg">{app.name}</div>
+        <div className="text-white/60 text-xs mt-1">Loading...</div>
+      </motion.div>
+
+      {/* Loading bar */}
+      <motion.div className="relative z-10 mt-6 w-40 sm:w-56">
+        <div className="h-1 bg-white/20 rounded-full overflow-hidden">
+          <motion.div
+            initial={{ width: "0%" }}
+            animate={{ width: "100%" }}
+            transition={{ duration: duration / 1000, ease: "easeInOut" }}
+            className="h-full rounded-full"
+            style={{ background: `linear-gradient(90deg, ${app.color}, white)` }}
+          />
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* DesktopScreen                                                      */
+/* ------------------------------------------------------------------ */
+
 function DesktopScreen({
   apps,
   onAppClick,
-  accentColor,
   laptopIndex,
 }: {
   apps: AppDefinition[];
   onAppClick: (appId: string) => void;
-  accentColor: string;
   laptopIndex: 0 | 1;
 }) {
   return (
-    <div className="absolute inset-0 flex flex-col bg-gradient-to-br from-gray-800 via-gray-900 to-gray-950">
+    <div className="absolute inset-0 flex flex-col bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]">
       {/* Top bar */}
-      <div className="flex items-center justify-between px-3 py-1.5 bg-black/30 shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-black/40 shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-[10px] text-white/70 font-medium">
-            {laptopIndex === 0 ? "HP" : "HP"} Desktop
-          </span>
+          <img src={HP_DESKTOP_LOGO} alt="HP" className="w-3.5 h-3.5 object-contain brightness-200" />
+          <span className="text-[10px] text-white/80 font-semibold">HP Desktop</span>
         </div>
-        <div className="flex items-center gap-3 text-[10px] text-white/50">
-          <span>WiFi ✓</span>
-          <span>🔋 85%</span>
-          <span>12:30</span>
+        <div className="flex items-center gap-3 text-[10px] text-white/60">
+          <div className="flex items-center gap-1">
+            <img src={WIFI_ICON} alt="WiFi" className="w-3 h-3 object-contain brightness-0 invert opacity-60" />
+            <span>Connected</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <img src={BATTERY_ICON} alt="Battery" className="w-3 h-3 object-contain brightness-0 invert opacity-60" />
+            <span>85%</span>
+          </div>
+          <span className="tabular-nums">12:30</span>
         </div>
       </div>
 
-      {/* Desktop area with app grid */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <div className="grid grid-cols-5 gap-3">
+      {/* Desktop area with 3x3+1 app grid */}
+      <div className="flex-1 flex items-center justify-center p-3 sm:p-6">
+        <div className="grid grid-cols-3 gap-3 sm:gap-5">
           {apps.map((app) => (
             <button
               key={app.id}
               onClick={() => onAppClick(app.id)}
-              className="flex flex-col items-center gap-1.5 p-2 rounded-xl hover:bg-white/10 transition-all group cursor-pointer"
+              className="flex flex-col items-center gap-2 p-3 sm:p-4 rounded-2xl hover:bg-white/8 active:bg-white/12 transition-all group cursor-pointer w-24 sm:w-32"
             >
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center text-sm font-bold shadow-lg group-hover:scale-110 transition-transform"
-                style={{
-                  backgroundColor: app.color + "20",
-                  color: app.color,
-                  border: `2px solid ${app.color}50`,
-                }}
-              >
-                {app.icon}
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl overflow-hidden bg-white shadow-lg group-hover:shadow-xl group-hover:scale-105 transition-all flex items-center justify-center">
+                <img
+                  src={app.logo}
+                  alt={app.name}
+                  className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                  loading="eager"
+                />
               </div>
-              <span className="text-[9px] text-white/70 font-medium text-center leading-tight group-hover:text-white transition-colors">
+              <span className="text-[10px] sm:text-[11px] text-white/70 font-medium text-center leading-tight group-hover:text-white transition-colors">
                 {app.name}
               </span>
             </button>
@@ -531,15 +601,19 @@ function DesktopScreen({
       </div>
 
       {/* Bottom taskbar */}
-      <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-black/40 shrink-0">
-        <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/5 border border-white/10">
-          <div className="w-3 h-3 rounded bg-gradient-to-br from-blue-400 to-purple-500" />
-          <span className="text-[9px] text-white/60">Start</span>
+      <div className="flex items-center justify-center gap-2 px-4 py-2 bg-black/50 shrink-0">
+        <div className="flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-white/8 border border-white/10 hover:bg-white/12 transition-colors cursor-pointer">
+          <img src={HP_DESKTOP_LOGO} alt="Start" className="w-3.5 h-3.5 object-contain brightness-200" />
+          <span className="text-[10px] text-white/70 font-medium">Start</span>
         </div>
       </div>
     </div>
   );
 }
+
+/* ------------------------------------------------------------------ */
+/* FinalReportOverlay                                                 */
+/* ------------------------------------------------------------------ */
 
 function FinalReportOverlay({
   tests,
@@ -564,34 +638,13 @@ function FinalReportOverlay({
       laptop1Time: t.time1,
       laptop2Time: t.time2,
       laptop1Metrics: t.metrics1
-        ? {
-            cpuUsage: t.metrics1.cpuUsage,
-            gpuUsage: t.metrics1.gpuUsage,
-            ramUsage: t.metrics1.ramUsage,
-            storageActivity: 0,
-            temperature: t.metrics1.temperature,
-            fanSpeed: t.metrics1.fanSpeed,
-            batteryDrain: 0,
-            powerDraw: 0,
-          }
+        ? { cpuUsage: t.metrics1.cpuUsage, gpuUsage: t.metrics1.gpuUsage, ramUsage: t.metrics1.ramUsage, storageActivity: 0, temperature: t.metrics1.temperature, fanSpeed: t.metrics1.fanSpeed, batteryDrain: 0, powerDraw: 0 }
         : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
       laptop2Metrics: t.metrics2
-        ? {
-            cpuUsage: t.metrics2.cpuUsage,
-            gpuUsage: t.metrics2.gpuUsage,
-            ramUsage: t.metrics2.ramUsage,
-            storageActivity: 0,
-            temperature: t.metrics2.temperature,
-            fanSpeed: t.metrics2.fanSpeed,
-            batteryDrain: 0,
-            powerDraw: 0,
-          }
+        ? { cpuUsage: t.metrics2.cpuUsage, gpuUsage: t.metrics2.gpuUsage, ramUsage: t.metrics2.ramUsage, storageActivity: 0, temperature: t.metrics2.temperature, fanSpeed: t.metrics2.fanSpeed, batteryDrain: 0, powerDraw: 0 }
         : { cpuUsage: 0, gpuUsage: 0, ramUsage: 0, storageActivity: 0, temperature: 0, fanSpeed: 0, batteryDrain: 0, powerDraw: 0 },
       winnerIndex: t.winner as 0 | 1 | -1,
-      difference:
-        Math.max(t.time1, t.time2) > 0
-          ? (Math.abs(t.time1 - t.time2) / Math.max(t.time1, t.time2)) * 100
-          : 0,
+      difference: Math.max(t.time1, t.time2) > 0 ? (Math.abs(t.time1 - t.time2) / Math.max(t.time1, t.time2)) * 100 : 0,
       efficiency1: "Good",
       efficiency2: "Good",
       isFpsTest: false,
@@ -601,37 +654,21 @@ function FinalReportOverlay({
   const report = generateFinalReport(results as any, laptop1, laptop2);
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      className="absolute inset-0 z-50 bg-white overflow-y-auto"
-    >
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 z-50 bg-white overflow-y-auto">
       <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm">
         <h2 className="text-lg font-bold text-gray-900">Final Comparison Report</h2>
         <div className="flex gap-2">
-          <button
-            onClick={onRetry}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-          >
+          <button onClick={onRetry} className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors">
             <RotateCcw size={12} />
             Run Again
           </button>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
             <X size={14} />
           </button>
         </div>
       </div>
       <div className="max-w-5xl mx-auto p-4">
-        <FinalReport
-          report={report}
-          laptop1Name={laptop1.name}
-          laptop2Name={laptop2.name}
-          laptop1Price={laptop1.price}
-          laptop2Price={laptop2.price}
-        />
+        <FinalReport report={report} laptop1Name={laptop1.name} laptop2Name={laptop2.name} laptop1Price={laptop1.price} laptop2Price={laptop2.price} />
       </div>
     </motion.div>
   );
